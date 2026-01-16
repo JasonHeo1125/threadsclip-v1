@@ -111,7 +111,19 @@ export default function LoginPage() {
             </button>
           </div>
           
-          <div className="mt-8 pt-6 border-t border-[var(--color-border)]">
+          <div className="mt-6">
+            <a
+              href="/guide"
+              className="btn btn-ghost w-full text-[var(--color-primary)]"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {language === 'ko' ? '사용법 보기' : 'How to use'}
+            </a>
+          </div>
+
+          <div className="mt-6 pt-6 border-t border-[var(--color-border)]">
             <p className="text-xs text-[var(--color-text-muted)]">
               {language === 'ko' 
                 ? '로그인하면 서비스 이용약관 및 개인정보처리방침에 동의하는 것으로 간주됩니다.'
