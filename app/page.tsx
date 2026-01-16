@@ -1,65 +1,205 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useEffect, useState, useCallback } from 'react';
+import { useTranslation } from '@/lib/i18n';
+import { Header } from '@/components/ui/Header';
+import { SearchBar } from '@/components/ui/SearchBar';
+import { ThreadCard } from '@/components/thread/ThreadCard';
+import { SaveThreadModal } from '@/components/thread/SaveThreadModal';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { ThreadListSkeleton } from '@/components/ui/Loading';
+import { ToastContainer, showToast } from '@/components/ui/Toast';
+import { AdBannerPlaceholder } from '@/components/ui/AdBanner';
+import { createClient } from '@/lib/supabase/client';
+import type { SavedThread, Tag, Profile } from '@/types/database';
+
+type ThreadWithTags = SavedThread & { tags: Tag[] };
+
+export default function HomePage() {
+  const { t } = useTranslation();
+  const [threads, setThreads] = useState<ThreadWithTags[]>([]);
+  const [filteredThreads, setFilteredThreads] = useState<ThreadWithTags[]>([]);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const supabase = createClient();
+
+  const fetchThreads = useCallback(async () => {
+    try {
+      const response = await fetch('/api/threads');
+      const { data } = await response.json();
+      setThreads(data || []);
+      setFilteredThreads(data || []);
+    } catch (error) {
+      console.error('Failed to fetch threads:', error);
+      showToast(t.common.error, 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [t.common.error]);
+
+  const fetchProfile = useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      setProfile(data);
+    }
+  }, [supabase]);
+
+  useEffect(() => {
+    fetchProfile();
+    fetchThreads();
+  }, [fetchProfile, fetchThreads]);
+
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setFilteredThreads(threads);
+      return;
+    }
+
+    const query = searchQuery.toLowerCase();
+    const filtered = threads.filter(
+      (thread) =>
+        thread.content_snippet?.toLowerCase().includes(query) ||
+        thread.author_name?.toLowerCase().includes(query) ||
+        thread.author_username?.toLowerCase().includes(query) ||
+        thread.tags?.some((tag) => tag.name.toLowerCase().includes(query))
+    );
+    setFilteredThreads(filtered);
+  }, [searchQuery, threads]);
+
+  const handleSaveThread = async (url: string) => {
+    try {
+      const response = await fetch('/api/threads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        if (response.status === 409) {
+          showToast(t.thread.alreadySaved, 'info');
+          return;
+        }
+        if (response.status === 429) {
+          showToast(t.thread.maxReached, 'error');
+          return;
+        }
+        throw new Error(result.error);
+      }
+
+      showToast(t.thread.saved, 'success');
+      fetchThreads();
+    } catch {
+      throw new Error('Save failed');
+    }
+  };
+
+  const handleDeleteThread = async (id: string) => {
+    if (!confirm(t.thread.deleteConfirm)) return;
+
+    try {
+      const response = await fetch(`/api/threads?id=${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Delete failed');
+      }
+
+      setThreads((prev) => prev.filter((thread) => thread.id !== id));
+      setFilteredThreads((prev) => prev.filter((thread) => thread.id !== id));
+      showToast(t.common.success, 'success');
+    } catch {
+      showToast(t.common.error, 'error');
+    }
+  };
+
+  const handleSearch = () => {
+    if (!searchQuery.trim()) return;
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-screen bg-[var(--color-bg)]">
+      <Header user={profile} onAddClick={() => setIsModalOpen(true)} />
+
+      <main className="max-w-3xl mx-auto px-4 py-6">
+        <AdBannerPlaceholder className="mb-6" />
+
+        <div className="mb-6">
+          <SearchBar
+            value={searchQuery}
+            onChange={setSearchQuery}
+            onSearch={handleSearch}
+          />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-[var(--color-text)]">
+            {t.home.title}
+            {filteredThreads.length > 0 && (
+              <span className="ml-2 text-sm font-normal text-[var(--color-text-muted)]">
+                ({filteredThreads.length})
+              </span>
+            )}
+          </h2>
         </div>
+
+        {isLoading ? (
+          <ThreadListSkeleton count={3} />
+        ) : filteredThreads.length === 0 ? (
+          <EmptyState
+            icon={searchQuery ? 'search' : 'bookmark'}
+            title={searchQuery ? t.common.error : undefined}
+            subtitle={searchQuery ? undefined : undefined}
+            action={
+              !searchQuery && (
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="btn btn-primary"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  {t.home.addNew}
+                </button>
+              )
+            }
+          />
+        ) : (
+          <div className="space-y-4">
+            {filteredThreads.map((thread, index) => (
+              <div
+                key={thread.id}
+                className="animate-fade-in"
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
+                <ThreadCard
+                  thread={thread}
+                  onDelete={handleDeleteThread}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+
+        <AdBannerPlaceholder className="mt-8" />
       </main>
+
+      <SaveThreadModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSaveThread}
+      />
+
+      <ToastContainer />
     </div>
   );
 }

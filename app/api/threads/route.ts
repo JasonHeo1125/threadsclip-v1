@@ -1,0 +1,159 @@
+import { NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import { getThreadsOEmbed, extractTextFromHtml, isValidThreadsUrl, extractUsernameFromUrl } from '@/lib/threads/oembed';
+
+export async function POST(request: Request) {
+  try {
+    const supabase = await createClient();
+    
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { url } = await request.json();
+    
+    if (!url || !isValidThreadsUrl(url)) {
+      return NextResponse.json({ error: 'Invalid Threads URL' }, { status: 400 });
+    }
+
+    const { count } = await supabase
+      .from('saved_threads')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id);
+
+    if (count && count >= 100) {
+      return NextResponse.json({ error: 'Storage limit reached (100 threads)' }, { status: 429 });
+    }
+
+    const { data: existing } = await supabase
+      .from('saved_threads')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('original_url', url)
+      .single() as { data: { id: string } | null };
+
+    if (existing) {
+      return NextResponse.json({ error: 'Thread already saved', id: existing.id }, { status: 409 });
+    }
+
+    const oembedData = await getThreadsOEmbed(url);
+    const usernameFromUrl = extractUsernameFromUrl(url);
+
+    const threadData = {
+      user_id: user.id,
+      original_url: url,
+      content_snippet: oembedData?.html ? extractTextFromHtml(oembedData.html) : null,
+      image_url: oembedData?.thumbnail_url || null,
+      author_name: oembedData?.author_name || (usernameFromUrl ? `@${usernameFromUrl}` : null),
+      author_username: oembedData?.author_url?.split('/').pop()?.replace('@', '') || usernameFromUrl || null,
+    };
+
+    const { data, error } = await supabase
+      .from('saved_threads')
+      .insert(threadData as never)
+      .select()
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    return NextResponse.json({ success: true, data });
+  } catch (error) {
+    console.error('Save thread error:', error);
+    return NextResponse.json(
+      { error: 'Failed to save thread' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function GET() {
+  try {
+    const supabase = await createClient();
+    
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    interface ThreadWithJoins {
+      id: string;
+      user_id: string;
+      original_url: string;
+      content_snippet: string | null;
+      image_url: string | null;
+      author_name: string | null;
+      author_username: string | null;
+      created_at: string;
+      updated_at: string;
+      thread_tags?: Array<{ tag_id: string; tags: unknown }>;
+    }
+
+    const { data, error } = await supabase
+      .from('saved_threads')
+      .select(`
+        *,
+        thread_tags (
+          tag_id,
+          tags (*)
+        )
+      `)
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false }) as { data: ThreadWithJoins[] | null; error: unknown };
+
+    if (error) {
+      throw error;
+    }
+
+    const threadsWithTags = (data || []).map(thread => ({
+      ...thread,
+      tags: thread.thread_tags?.map((tt) => tt.tags) || [],
+    }));
+
+    return NextResponse.json({ data: threadsWithTags });
+  } catch (error) {
+    console.error('Get threads error:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch threads' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const supabase = await createClient();
+    
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json({ error: 'Thread ID required' }, { status: 400 });
+    }
+
+    const { error } = await supabase
+      .from('saved_threads')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', user.id);
+
+    if (error) {
+      throw error;
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Delete thread error:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete thread' },
+      { status: 500 }
+    );
+  }
+}
