@@ -51,7 +51,6 @@ export default function RootLayout({
   return (
     <html lang="ko" suppressHydrationWarning>
       <head>
-        <link rel="manifest" href="/manifest.json" />
         <link rel="icon" href="/icons/icon-192x192.png" />
         <link rel="apple-touch-icon" href="/icons/icon-512x512.png" />
         <meta name="mobile-web-app-capable" content="yes" />
@@ -71,17 +70,6 @@ export default function RootLayout({
         <I18nProvider>
           {children}
         </I18nProvider>
-        <Script id="register-sw" strategy="afterInteractive">
-          {`
-            if ('serviceWorker' in navigator) {
-              window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                  .then(reg => console.log('SW registered:', reg.scope))
-                  .catch(err => console.error('SW registration failed:', err));
-              });
-            }
-          `}
-        </Script>
       </body>
     </html>
   );
