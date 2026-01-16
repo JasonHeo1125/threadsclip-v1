@@ -106,6 +106,11 @@ export default function GuidePage() {
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) {
+      alert(
+        isKorean 
+          ? '브라우저 메뉴(⋮)를 열고 "홈 화면에 추가" 또는 "앱 설치"를 선택해주세요.' 
+          : 'Please open the browser menu (⋮) and select "Add to Home screen" or "Install app".'
+      );
       return;
     }
 
@@ -409,31 +414,34 @@ export default function GuidePage() {
                   : 'Tap the button below to add ThreadClip to your home screen.'}
               </p>
               
-              {isInstalled ? (
-                <div className="p-4 bg-green-500/10 border-2 border-green-500/50 rounded-lg">
-                  <p className="text-[var(--color-text)] text-sm flex items-center gap-2">
-                    <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    {isKorean ? '✅ 이미 홈 화면에 추가되었습니다!' : '✅ Already added to home screen!'}
-                  </p>
-                </div>
-              ) : deferredPrompt ? (
-                <button
-                  onClick={handleInstallClick}
-                  className="btn btn-primary w-full flex items-center justify-center gap-2"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <button
+                onClick={handleInstallClick}
+                disabled={isInstalled}
+                className={`btn w-full flex items-center justify-center gap-2 ${
+                  isInstalled 
+                    ? 'bg-green-500 text-white cursor-not-allowed opacity-60' 
+                    : 'btn-primary'
+                }`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {isInstalled ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  ) : (
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                  </svg>
-                  {isKorean ? '홈 화면에 추가' : 'Add to Home Screen'}
-                </button>
-              ) : (
-                <div className="p-4 bg-[var(--color-bg-elevated)] rounded-lg">
-                  <p className="text-[var(--color-text-muted)] text-sm">
+                  )}
+                </svg>
+                {isInstalled 
+                  ? (isKorean ? '설치 완료' : 'Installed')
+                  : (isKorean ? '홈 화면에 추가' : 'Add to Home Screen')
+                }
+              </button>
+
+              {!deferredPrompt && !isInstalled && (
+                <div className="mt-4 p-3 bg-[var(--color-bg-elevated)] rounded-lg">
+                  <p className="text-xs text-[var(--color-text-muted)]">
                     {isKorean 
-                      ? '💡 Chrome 메뉴 > "홈 화면에 추가"를 선택하세요'
-                      : '💡 Open Chrome menu > Select "Add to Home Screen"'}
+                      ? '💡 자동 설치가 지원되지 않는 경우, Chrome 메뉴에서 "홈 화면에 추가"를 선택하세요'
+                      : '💡 If auto-install is not supported, select "Add to Home Screen" from Chrome menu'}
                   </p>
                 </div>
               )}
