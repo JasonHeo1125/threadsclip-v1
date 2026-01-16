@@ -2,7 +2,7 @@ const CACHE_NAME = 'threadclip-v1';
 const urlsToCache = [
   '/',
   '/guide',
-  '/manifest.webmanifest',
+  '/manifest.json',
 ];
 
 self.addEventListener('install', (event) => {
