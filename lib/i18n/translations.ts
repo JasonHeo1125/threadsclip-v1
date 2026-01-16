@@ -41,7 +41,11 @@ export const translations = {
     thread: {
       saveTitle: '쓰레드 저장',
       urlPlaceholder: 'Threads 링크를 붙여넣으세요',
+      urlLabel: 'Threads URL',
       urlHint: '예: https://threads.net/@username/post/xxxxx',
+      memoLabel: '메모 (검색용)',
+      memoPlaceholder: '이 게시물에 대한 메모를 입력하세요. 나중에 검색할 때 사용됩니다.',
+      memoHint: '💡 키워드, 요약, 기억하고 싶은 내용 등을 입력하세요',
       saving: '저장 중...',
       saved: '저장되었습니다!',
       alreadySaved: '이미 저장된 쓰레드입니다',
@@ -124,7 +128,11 @@ export const translations = {
     thread: {
       saveTitle: 'Save Thread',
       urlPlaceholder: 'Paste a Threads link',
+      urlLabel: 'Threads URL',
       urlHint: 'e.g., https://threads.net/@username/post/xxxxx',
+      memoLabel: 'Memo (for search)',
+      memoPlaceholder: 'Add a memo about this post. It will be used for searching later.',
+      memoHint: '💡 Add keywords, summary, or anything you want to remember',
       saving: 'Saving...',
       saved: 'Saved!',
       alreadySaved: 'This thread is already saved',
@@ -207,7 +215,11 @@ type TranslationStructure = {
   thread: {
     saveTitle: string;
     urlPlaceholder: string;
+    urlLabel: string;
     urlHint: string;
+    memoLabel: string;
+    memoPlaceholder: string;
+    memoHint: string;
     saving: string;
     saved: string;
     alreadySaved: string;

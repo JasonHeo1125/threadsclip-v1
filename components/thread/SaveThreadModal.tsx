@@ -7,12 +7,13 @@ import { showToast } from '@/components/ui/Toast';
 interface SaveThreadModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (url: string) => Promise<void>;
+  onSave: (url: string, memo: string) => Promise<void>;
 }
 
 export function SaveThreadModal({ isOpen, onClose, onSave }: SaveThreadModalProps) {
   const { t } = useTranslation();
   const [url, setUrl] = useState('');
+  const [memo, setMemo] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   if (!isOpen) return null;
@@ -29,8 +30,9 @@ export function SaveThreadModal({ isOpen, onClose, onSave }: SaveThreadModalProp
 
     setIsLoading(true);
     try {
-      await onSave(url.trim());
+      await onSave(url.trim(), memo.trim());
       setUrl('');
+      setMemo('');
       onClose();
     } catch {
       showToast(t.common.error, 'error');
@@ -61,6 +63,9 @@ export function SaveThreadModal({ isOpen, onClose, onSave }: SaveThreadModalProp
 
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
+            <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
+              {t.thread.urlLabel || 'Threads URL'}
+            </label>
             <input
               type="url"
               value={url}
@@ -70,8 +75,21 @@ export function SaveThreadModal({ isOpen, onClose, onSave }: SaveThreadModalProp
               autoFocus
               disabled={isLoading}
             />
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
+              {t.thread.memoLabel || '메모 (검색용)'}
+            </label>
+            <textarea
+              value={memo}
+              onChange={(e) => setMemo(e.target.value)}
+              placeholder={t.thread.memoPlaceholder || '이 게시물에 대한 메모를 입력하세요. 나중에 검색할 때 사용됩니다.'}
+              className="input min-h-[100px] resize-none"
+              disabled={isLoading}
+            />
             <p className="text-xs text-[var(--color-text-muted)] mt-2">
-              {t.thread.urlHint}
+              {t.thread.memoHint || '💡 키워드, 요약, 기억하고 싶은 내용 등을 입력하세요'}
             </p>
           </div>
 

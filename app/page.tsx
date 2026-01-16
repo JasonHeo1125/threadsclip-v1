@@ -65,7 +65,7 @@ export default function HomePage() {
     const query = searchQuery.toLowerCase();
     const filtered = threads.filter(
       (thread) =>
-        thread.content_snippet?.toLowerCase().includes(query) ||
+        thread.memo?.toLowerCase().includes(query) ||
         thread.author_name?.toLowerCase().includes(query) ||
         thread.author_username?.toLowerCase().includes(query) ||
         thread.tags?.some((tag) => tag.name.toLowerCase().includes(query))
@@ -73,12 +73,12 @@ export default function HomePage() {
     setFilteredThreads(filtered);
   }, [searchQuery, threads]);
 
-  const handleSaveThread = async (url: string) => {
+  const handleSaveThread = async (url: string, memo: string) => {
     try {
       const response = await fetch('/api/threads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({ url, memo }),
       });
 
       const result = await response.json();

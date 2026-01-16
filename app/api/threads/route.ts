@@ -11,7 +11,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { url } = await request.json();
+    const { url, memo } = await request.json();
     
     if (!url || !isValidThreadsUrl(url)) {
       return NextResponse.json({ error: 'Invalid Threads URL' }, { status: 400 });
@@ -47,6 +47,7 @@ export async function POST(request: Request) {
       image_url: oembedData?.thumbnail_url || null,
       author_name: oembedData?.author_name || (usernameFromUrl ? `@${usernameFromUrl}` : null),
       author_username: oembedData?.author_url?.split('/').pop()?.replace('@', '') || usernameFromUrl || null,
+      memo: memo || null,
     };
 
     const { data, error } = await supabase
@@ -86,6 +87,7 @@ export async function GET() {
       image_url: string | null;
       author_name: string | null;
       author_username: string | null;
+      memo: string | null;
       created_at: string;
       updated_at: string;
       thread_tags?: Array<{ tag_id: string; tags: unknown }>;

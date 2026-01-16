@@ -33,6 +33,7 @@ export type Database = {
           image_url: string | null;
           author_name: string | null;
           author_username: string | null;
+          memo: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -44,6 +45,7 @@ export type Database = {
           image_url?: string | null;
           author_name?: string | null;
           author_username?: string | null;
+          memo?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -55,6 +57,7 @@ export type Database = {
           image_url?: string | null;
           author_name?: string | null;
           author_username?: string | null;
+          memo?: string | null;
           created_at?: string;
           updated_at?: string;
         };

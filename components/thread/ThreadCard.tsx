@@ -18,7 +18,7 @@ function getEmbedUrl(originalUrl: string): string {
 
 export function ThreadCard({ thread, onDelete, onTagClick }: ThreadCardProps) {
   const { t } = useTranslation();
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
   const [embedLoaded, setEmbedLoaded] = useState(false);
   const [embedError, setEmbedError] = useState(false);
 
@@ -132,6 +132,17 @@ export function ThreadCard({ thread, onDelete, onTagClick }: ThreadCardProps) {
           <p className="text-sm text-[var(--color-text-secondary)] line-clamp-2">
             {thread.content_snippet || '클릭하여 게시물 보기'}
           </p>
+        </div>
+      )}
+
+      {thread.memo && (
+        <div className="px-4 py-2 bg-[var(--color-bg-elevated)] border-t border-[var(--color-border)]">
+          <div className="flex items-start gap-2">
+            <svg className="w-4 h-4 text-[var(--color-primary)] mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+            </svg>
+            <p className="text-sm text-[var(--color-text-secondary)]">{thread.memo}</p>
+          </div>
         </div>
       )}
 
