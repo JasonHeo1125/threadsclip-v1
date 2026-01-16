@@ -220,12 +220,13 @@ export default function GuidePage() {
                     : '💡 When the Shortcuts app opens, tap "Add Shortcut"'}
                 </p>
               </div>
-              <div className="mt-4 aspect-[9/16] bg-[var(--color-bg-elevated)] rounded-lg overflow-hidden relative">
+              <div className="mt-4 bg-[var(--color-bg-elevated)] rounded-lg overflow-hidden">
                 <Image 
                   src="/guide/iphone-1.jpg" 
                   alt={isKorean ? '단축어 추가 화면' : 'Add Shortcut Screen'}
-                  fill
-                  className="object-contain"
+                  width={1206}
+                  height={2295}
+                  className="w-full h-auto"
                 />
               </div>
             </div>
@@ -244,12 +245,13 @@ export default function GuidePage() {
                   ? '저장하고 싶은 게시물에서 공유 버튼을 누르세요.'
                   : 'Tap the share button on the post you want to save.'}
               </p>
-              <div className="aspect-[9/16] bg-[var(--color-bg-elevated)] rounded-lg overflow-hidden relative">
+              <div className="bg-[var(--color-bg-elevated)] rounded-lg overflow-hidden">
                 <Image 
                   src="/guide/iphone-2.jpg" 
                   alt={isKorean ? 'Threads 공유 버튼' : 'Threads Share Button'}
-                  fill
-                  className="object-contain"
+                  width={1206}
+                  height={2144}
+                  className="w-full h-auto"
                 />
               </div>
             </div>
@@ -318,12 +320,13 @@ export default function GuidePage() {
                   ? 'Safari가 열리면 메모를 입력하고 저장 버튼을 누르세요.'
                   : 'When Safari opens, enter a note and tap the save button.'}
               </p>
-              <div className="aspect-[9/16] bg-[var(--color-bg-elevated)] rounded-lg overflow-hidden relative">
+              <div className="bg-[var(--color-bg-elevated)] rounded-lg overflow-hidden">
                 <Image 
                   src="/guide/iphone-5.jpg" 
                   alt={isKorean ? '메모 입력 및 저장' : 'Add Note and Save'}
-                  fill
-                  className="object-contain"
+                  width={1206}
+                  height={2107}
+                  className="w-full h-auto"
                 />
               </div>
             </div>
