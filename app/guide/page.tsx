@@ -227,6 +227,25 @@ export default function GuidePage() {
                   4
                 </div>
                 <h2 className="text-lg font-semibold text-[var(--color-text)]">
+                  {isKorean ? '"항상 허용" 선택' : 'Select "Always Allow"'}
+                </h2>
+              </div>
+              <p className="text-[var(--color-text-secondary)] mb-4">
+                {isKorean 
+                  ? '권한 요청 팝업이 나타나면 "항상 허용"을 선택해주세요. 이후에는 별도 확인 없이 바로 저장됩니다.'
+                  : 'When the permission popup appears, select "Always Allow". After this, posts will be saved without additional confirmation.'}
+              </p>
+              <div className="aspect-[9/16] bg-[var(--color-bg-elevated)] rounded-lg flex items-center justify-center">
+                <p className="text-[var(--color-text-muted)] text-sm">{isKorean ? '스크린샷 준비중' : 'Screenshot coming soon'}</p>
+              </div>
+            </div>
+
+            <div className="card p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-8 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center font-bold">
+                  5
+                </div>
+                <h2 className="text-lg font-semibold text-[var(--color-text)]">
                   {isKorean ? '메모 입력 후 저장' : 'Add Note and Save'}
                 </h2>
               </div>
