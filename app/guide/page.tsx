@@ -105,6 +105,10 @@ export default function GuidePage() {
   }, [supabase.auth]);
 
   const handleInstallClick = async () => {
+    if (isInstalled) {
+      return;
+    }
+
     if (!deferredPrompt) {
       alert(
         isKorean 
@@ -410,8 +414,8 @@ export default function GuidePage() {
               </div>
               <p className="text-[var(--color-text-secondary)] mb-4">
                 {isKorean 
-                  ? '아래 버튼을 눌러 ThreadClip을 홈 화면에 추가하세요.'
-                  : 'Tap the button below to add ThreadClip to your home screen.'}
+                  ? '버튼을 눌러 ThreadClip 앱을 홈 화면에 추가하세요. 앱은 메인 페이지에서 시작됩니다.'
+                  : 'Tap the button to add ThreadClip app to your home screen. The app will start from the main page.'}
               </p>
               
               <button
