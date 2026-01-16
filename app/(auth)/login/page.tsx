@@ -3,6 +3,7 @@
 import { useTranslation } from '@/lib/i18n';
 import { createClient } from '@/lib/supabase/client';
 import { useState } from 'react';
+import Link from 'next/link';
 
 export default function LoginPage() {
   const { t, language, setLanguage } = useTranslation();
@@ -112,7 +113,7 @@ export default function LoginPage() {
           </div>
           
           <div className="mt-6">
-            <a
+            <Link
               href="/guide"
               className="btn btn-ghost w-full text-[var(--color-primary)]"
             >
@@ -120,7 +121,7 @@ export default function LoginPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               {language === 'ko' ? '사용법 보기' : 'How to use'}
-            </a>
+            </Link>
           </div>
 
           <div className="mt-6 pt-6 border-t border-[var(--color-border)]">
