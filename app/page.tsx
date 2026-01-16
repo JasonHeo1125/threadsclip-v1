@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { useTranslation } from '@/lib/i18n';
 import { Header } from '@/components/ui/Header';
 import { SearchBar } from '@/components/ui/SearchBar';
@@ -17,6 +18,7 @@ type ThreadWithTags = SavedThread & { tags: Tag[] };
 
 export default function HomePage() {
   const { t } = useTranslation();
+  const router = useRouter();
   const [threads, setThreads] = useState<ThreadWithTags[]>([]);
   const [filteredThreads, setFilteredThreads] = useState<ThreadWithTags[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -24,6 +26,14 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const supabase = createClient();
+
+  useEffect(() => {
+    const redirectPath = localStorage.getItem('loginRedirect');
+    if (redirectPath) {
+      localStorage.removeItem('loginRedirect');
+      router.replace(redirectPath);
+    }
+  }, [router]);
 
   const fetchThreads = useCallback(async () => {
     try {

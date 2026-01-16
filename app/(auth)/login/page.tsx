@@ -1,14 +1,24 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useTranslation } from '@/lib/i18n';
 import { createClient } from '@/lib/supabase/client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-export default function LoginPage() {
+function LoginContent() {
   const { t, language, setLanguage } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
+  const searchParams = useSearchParams();
   const supabase = createClient();
+
+  useEffect(() => {
+    const redirect = searchParams.get('redirect');
+    if (redirect) {
+      localStorage.setItem('loginRedirect', redirect);
+    }
+  }, [searchParams]);
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);
@@ -166,5 +176,21 @@ export default function LoginPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+function LoginLoading() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-8 h-8 border-2 border-[var(--color-primary)] border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginLoading />}>
+      <LoginContent />
+    </Suspense>
   );
 }

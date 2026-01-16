@@ -81,7 +81,7 @@ export default function GuidePage() {
                   : '⚠️ Please login before setting up the shortcut! Otherwise, you may need to share again.'}
               </p>
               <Link
-                href="/login"
+                href="/login?redirect=/guide"
                 className="btn btn-primary w-full flex items-center justify-center gap-2"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -216,7 +216,7 @@ export default function GuidePage() {
                   : '⚠️ Please login before installing the app! Otherwise, you may need to share again.'}
               </p>
               <Link
-                href="/login"
+                href="/login?redirect=/guide"
                 className="btn btn-primary w-full flex items-center justify-center gap-2"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
