@@ -73,11 +73,32 @@ export default function LoginPage() {
           
           <div className="space-y-4">
             <h2 className="text-xl font-semibold text-[var(--color-text)]">
-              {t.auth.loginTitle}
+              {language === 'ko' ? '시작하기 전에' : 'Before you start'}
             </h2>
             <p className="text-[var(--color-text-muted)] text-sm">
-              {t.auth.loginSubtitle}
+              {language === 'ko' ? '먼저 사용법을 확인해주세요!' : 'Please check how to use first!'}
             </p>
+            
+            <Link
+              href="/guide"
+              className="btn btn-primary w-full"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+              {language === 'ko' ? '사용법 보기' : 'How to use'}
+            </Link>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-[var(--color-border)]"></div>
+              </div>
+              <div className="relative flex justify-center text-xs">
+                <span className="px-2 bg-[var(--color-bg-card)] text-[var(--color-text-muted)]">
+                  {language === 'ko' ? '이미 사용법을 알고 있다면' : 'Already know how to use?'}
+                </span>
+              </div>
+            </div>
             
             <button
               onClick={handleGoogleLogin}
@@ -112,23 +133,11 @@ export default function LoginPage() {
             </button>
           </div>
           
-          <div className="mt-6">
-            <Link
-              href="/guide"
-              className="btn btn-ghost w-full text-[var(--color-primary)]"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              {language === 'ko' ? '사용법 보기' : 'How to use'}
-            </Link>
-          </div>
-
           <div className="mt-6 pt-6 border-t border-[var(--color-border)]">
             <p className="text-xs text-[var(--color-text-muted)]">
               {language === 'ko' 
-                ? '로그인하면 서비스 이용약관 및 개인정보처리방침에 동의하는 것으로 간주됩니다.'
-                : 'By logging in, you agree to our Terms of Service and Privacy Policy.'}
+                ? <>로그인 시 <Link href="/terms" className="underline hover:text-[var(--color-primary)]">이용약관</Link> 및 <Link href="/privacy" className="underline hover:text-[var(--color-primary)]">개인정보처리방침</Link>에 동의하게 됩니다.</>
+                : <>By logging in, you agree to our <Link href="/terms" className="underline hover:text-[var(--color-primary)]">Terms</Link> and <Link href="/privacy" className="underline hover:text-[var(--color-primary)]">Privacy Policy</Link>.</>}
             </p>
           </div>
         </div>

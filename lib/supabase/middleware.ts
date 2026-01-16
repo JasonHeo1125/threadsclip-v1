@@ -36,7 +36,11 @@ export async function updateSession(request: NextRequest) {
   const isAuthPage = request.nextUrl.pathname.startsWith('/login');
   const isAuthCallback = request.nextUrl.pathname.startsWith('/auth/callback');
   const isShareTarget = request.nextUrl.pathname.startsWith('/share-target');
-  const isPublicRoute = isAuthPage || isAuthCallback;
+  const isGuidePage = request.nextUrl.pathname.startsWith('/guide');
+  const isPrivacyPage = request.nextUrl.pathname.startsWith('/privacy');
+  const isTermsPage = request.nextUrl.pathname.startsWith('/terms');
+  const isDataDeletion = request.nextUrl.pathname.startsWith('/data-deletion');
+  const isPublicRoute = isAuthPage || isAuthCallback || isGuidePage || isPrivacyPage || isTermsPage || isDataDeletion;
 
   if (!user && !isPublicRoute && !isShareTarget) {
     const url = request.nextUrl.clone();
