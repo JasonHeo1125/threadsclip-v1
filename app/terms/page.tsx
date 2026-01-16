@@ -126,8 +126,8 @@ export default function TermsPage() {
             </h2>
             <p>
               {isKorean 
-                ? '서비스 관련 문의사항은 이메일로 연락해주세요.'
-                : 'For service-related inquiries, please contact us by email.'}
+                ? <>서비스 관련 문의사항은 <a href="mailto:jasonheoai@gmail.com" className="text-[var(--color-primary)] underline">jasonheoai@gmail.com</a>으로 연락해주세요.</>
+                : <>For service-related inquiries, please contact us at <a href="mailto:jasonheoai@gmail.com" className="text-[var(--color-primary)] underline">jasonheoai@gmail.com</a>.</>}
             </p>
           </section>
         </div>
