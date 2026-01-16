@@ -2,6 +2,16 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getThreadsOEmbed, extractTextFromHtml, isValidThreadsUrl, extractUsernameFromUrl } from '@/lib/threads/oembed';
 
+function cleanThreadsUrl(url: string): string {
+  try {
+    const urlObj = new URL(url);
+    const cleanPath = urlObj.pathname.replace(/\/$/, '');
+    return `https://www.threads.net${cleanPath}`;
+  } catch {
+    return url;
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const supabase = await createClient();
@@ -17,6 +27,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid Threads URL' }, { status: 400 });
     }
 
+    const cleanedUrl = cleanThreadsUrl(url);
+
     const { count } = await supabase
       .from('saved_threads')
       .select('*', { count: 'exact', head: true })
@@ -30,19 +42,19 @@ export async function POST(request: Request) {
       .from('saved_threads')
       .select('id')
       .eq('user_id', user.id)
-      .eq('original_url', url)
+      .eq('original_url', cleanedUrl)
       .single() as { data: { id: string } | null };
 
     if (existing) {
       return NextResponse.json({ error: 'Thread already saved', id: existing.id }, { status: 409 });
     }
 
-    const oembedData = await getThreadsOEmbed(url);
-    const usernameFromUrl = extractUsernameFromUrl(url);
+    const oembedData = await getThreadsOEmbed(cleanedUrl);
+    const usernameFromUrl = extractUsernameFromUrl(cleanedUrl);
 
     const threadData = {
       user_id: user.id,
-      original_url: url,
+      original_url: cleanedUrl,
       content_snippet: oembedData?.html ? extractTextFromHtml(oembedData.html) : null,
       image_url: oembedData?.thumbnail_url || null,
       author_name: oembedData?.author_name || (usernameFromUrl ? `@${usernameFromUrl}` : null),
