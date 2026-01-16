@@ -74,6 +74,8 @@ export default function GuidePage() {
   const [platform, setPlatform] = useState<Platform>('ios');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isInstalled, setIsInstalled] = useState(false);
   const supabase = createClient();
 
   const SHORTCUT_URL = 'https://www.icloud.com/shortcuts/8e84b75970404140964e6ccb9a344a75';
@@ -85,7 +87,37 @@ export default function GuidePage() {
       setIsLoading(false);
     };
     checkAuth();
+
+    const handleBeforeInstallPrompt = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      setIsInstalled(true);
+    }
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
   }, [supabase.auth]);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) {
+      return;
+    }
+
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    
+    if (outcome === 'accepted') {
+      setIsInstalled(true);
+    }
+    
+    setDeferredPrompt(null);
+  };
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)]">
@@ -365,15 +397,46 @@ export default function GuidePage() {
                 <h2 className="text-lg font-semibold text-[var(--color-text)]">
                   {isKorean ? '앱 설치하기' : 'Install App'}
                 </h2>
+                {isInstalled && (
+                  <span className="px-2 py-0.5 bg-green-500 text-white text-xs rounded-full">
+                    {isKorean ? '완료' : 'Done'}
+                  </span>
+                )}
               </div>
               <p className="text-[var(--color-text-secondary)] mb-4">
                 {isKorean 
-                  ? 'Chrome에서 ThreadClip 사이트에 접속한 후, 메뉴에서 "홈 화면에 추가"를 선택하세요.'
-                  : 'Visit the ThreadClip site in Chrome, then select "Add to Home Screen" from the menu.'}
+                  ? '아래 버튼을 눌러 ThreadClip을 홈 화면에 추가하세요.'
+                  : 'Tap the button below to add ThreadClip to your home screen.'}
               </p>
-              <div className="aspect-[9/16] bg-[var(--color-bg-elevated)] rounded-lg flex items-center justify-center">
-                <p className="text-[var(--color-text-muted)] text-sm">{isKorean ? '스크린샷 준비중' : 'Screenshot coming soon'}</p>
-              </div>
+              
+              {isInstalled ? (
+                <div className="p-4 bg-green-500/10 border-2 border-green-500/50 rounded-lg">
+                  <p className="text-[var(--color-text)] text-sm flex items-center gap-2">
+                    <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    {isKorean ? '✅ 이미 홈 화면에 추가되었습니다!' : '✅ Already added to home screen!'}
+                  </p>
+                </div>
+              ) : deferredPrompt ? (
+                <button
+                  onClick={handleInstallClick}
+                  className="btn btn-primary w-full flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                  </svg>
+                  {isKorean ? '홈 화면에 추가' : 'Add to Home Screen'}
+                </button>
+              ) : (
+                <div className="p-4 bg-[var(--color-bg-elevated)] rounded-lg">
+                  <p className="text-[var(--color-text-muted)] text-sm">
+                    {isKorean 
+                      ? '💡 Chrome 메뉴 > "홈 화면에 추가"를 선택하세요'
+                      : '💡 Open Chrome menu > Select "Add to Home Screen"'}
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="card p-6">
