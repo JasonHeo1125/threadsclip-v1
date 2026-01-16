@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from '@/lib/i18n';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
+import Image from 'next/image';
 
 type Platform = 'ios' | 'android';
 
@@ -178,8 +179,13 @@ export default function GuidePage() {
                     : '💡 When the Shortcuts app opens, tap "Add Shortcut"'}
                 </p>
               </div>
-              <div className="mt-4 aspect-[9/16] bg-[var(--color-bg-elevated)] rounded-lg flex items-center justify-center">
-                <p className="text-[var(--color-text-muted)] text-sm">{isKorean ? '스크린샷 준비중' : 'Screenshot coming soon'}</p>
+              <div className="mt-4 aspect-[9/16] bg-[var(--color-bg-elevated)] rounded-lg overflow-hidden relative">
+                <Image 
+                  src="/guide/iphone-1.jpg" 
+                  alt={isKorean ? '단축어 추가 화면' : 'Add Shortcut Screen'}
+                  fill
+                  className="object-contain"
+                />
               </div>
             </div>
 
@@ -197,8 +203,13 @@ export default function GuidePage() {
                   ? '저장하고 싶은 게시물에서 공유 버튼을 누르세요.'
                   : 'Tap the share button on the post you want to save.'}
               </p>
-              <div className="aspect-[9/16] bg-[var(--color-bg-elevated)] rounded-lg flex items-center justify-center">
-                <p className="text-[var(--color-text-muted)] text-sm">{isKorean ? '스크린샷 준비중' : 'Screenshot coming soon'}</p>
+              <div className="aspect-[9/16] bg-[var(--color-bg-elevated)] rounded-lg overflow-hidden relative">
+                <Image 
+                  src="/guide/iphone-2.jpg" 
+                  alt={isKorean ? 'Threads 공유 버튼' : 'Threads Share Button'}
+                  fill
+                  className="object-contain"
+                />
               </div>
             </div>
 
@@ -216,8 +227,14 @@ export default function GuidePage() {
                   ? '공유 시트에서 "Thread clip" 단축어를 선택하세요.'
                   : 'Select the "Thread clip" shortcut from the share sheet.'}
               </p>
-              <div className="aspect-[9/16] bg-[var(--color-bg-elevated)] rounded-lg flex items-center justify-center">
-                <p className="text-[var(--color-text-muted)] text-sm">{isKorean ? '스크린샷 준비중' : 'Screenshot coming soon'}</p>
+              <div className="bg-[var(--color-bg-elevated)] rounded-lg overflow-hidden">
+                <Image 
+                  src="/guide/iphone-3.jpg" 
+                  alt={isKorean ? 'ThreadClip 단축어 선택' : 'Select ThreadClip Shortcut'}
+                  width={1206}
+                  height={1409}
+                  className="w-full h-auto"
+                />
               </div>
             </div>
 
@@ -235,8 +252,14 @@ export default function GuidePage() {
                   ? '권한 요청 팝업이 나타나면 "항상 허용"을 선택해주세요. 이후에는 별도 확인 없이 바로 저장됩니다.'
                   : 'When the permission popup appears, select "Always Allow". After this, posts will be saved without additional confirmation.'}
               </p>
-              <div className="aspect-[9/16] bg-[var(--color-bg-elevated)] rounded-lg flex items-center justify-center">
-                <p className="text-[var(--color-text-muted)] text-sm">{isKorean ? '스크린샷 준비중' : 'Screenshot coming soon'}</p>
+              <div className="bg-[var(--color-bg-elevated)] rounded-lg overflow-hidden">
+                <Image 
+                  src="/guide/iphone-4.jpg" 
+                  alt={isKorean ? '항상 허용 선택' : 'Select Always Allow'}
+                  width={1206}
+                  height={1435}
+                  className="w-full h-auto"
+                />
               </div>
             </div>
 
@@ -254,8 +277,13 @@ export default function GuidePage() {
                   ? 'Safari가 열리면 메모를 입력하고 저장 버튼을 누르세요.'
                   : 'When Safari opens, enter a note and tap the save button.'}
               </p>
-              <div className="aspect-[9/16] bg-[var(--color-bg-elevated)] rounded-lg flex items-center justify-center">
-                <p className="text-[var(--color-text-muted)] text-sm">{isKorean ? '스크린샷 준비중' : 'Screenshot coming soon'}</p>
+              <div className="aspect-[9/16] bg-[var(--color-bg-elevated)] rounded-lg overflow-hidden relative">
+                <Image 
+                  src="/guide/iphone-5.jpg" 
+                  alt={isKorean ? '메모 입력 및 저장' : 'Add Note and Save'}
+                  fill
+                  className="object-contain"
+                />
               </div>
             </div>
 
