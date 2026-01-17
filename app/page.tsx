@@ -35,6 +35,7 @@ export default function HomePage() {
   const [allTags, setAllTags] = useState<Tag[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const offsetRef = useRef(0);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
 
   useEffect(() => {
@@ -125,6 +126,23 @@ export default function HomePage() {
   useEffect(() => {
     fetchThreads(true);
   }, [debouncedSearch, selectedTagId, sortOrder, fetchThreads]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isLoadingMore && !isLoading) {
+          fetchThreads(false);
+        }
+      },
+      { rootMargin: '300px' }
+    );
+
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasMore, isLoadingMore, isLoading, fetchThreads]);
 
   const handleLoadMore = () => {
     if (!isLoadingMore && hasMore) {
@@ -321,24 +339,19 @@ export default function HomePage() {
               ))}
             </div>
             
-            {hasMore && (
-              <div className="mt-6 flex justify-center">
-                <button
-                  onClick={handleLoadMore}
-                  disabled={isLoadingMore}
-                  className="px-6 py-2 text-sm font-medium text-[var(--color-text-secondary)] bg-[var(--color-bg-elevated)] hover:bg-[var(--color-border)] rounded-lg transition-colors disabled:opacity-50"
-                >
-                  {isLoadingMore ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                      로딩 중...
-                    </div>
-                  ) : (
-                    `더 보기`
-                  )}
-                </button>
-              </div>
-            )}
+            <div ref={loadMoreRef} className="mt-6 flex justify-center py-4">
+              {isLoadingMore && (
+                <div className="flex items-center gap-2 text-[var(--color-text-muted)]">
+                  <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  <span className="text-sm">로딩 중...</span>
+                </div>
+              )}
+              {!hasMore && threads.length > 0 && (
+                <p className="text-sm text-[var(--color-text-muted)]">
+                  모든 쓰레드를 불러왔습니다
+                </p>
+              )}
+            </div>
           </>
         )}
       </main>
