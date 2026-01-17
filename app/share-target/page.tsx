@@ -212,7 +212,9 @@ function ShareTargetContent() {
           
           <div className="flex flex-col gap-3 max-w-xs mx-auto">
             <button
-              onClick={() => window.close()}
+              onClick={() => {
+                window.location.href = 'threads://';
+              }}
               className="px-6 py-3 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors font-medium"
             >
               Threads로 돌아가기
