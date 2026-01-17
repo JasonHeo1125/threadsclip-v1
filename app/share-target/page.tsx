@@ -4,6 +4,8 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
 import { useTranslation } from '@/lib/i18n';
 import { createClient } from '@/lib/supabase/client';
+import { showToast, ToastContainer } from '@/components/ui/Toast';
+import type { Tag } from '@/types/database';
 
 function ShareTargetContent() {
   const searchParams = useSearchParams();
@@ -13,7 +15,57 @@ function ShareTargetContent() {
   const [memo, setMemo] = useState('');
   const [status, setStatus] = useState<'loading' | 'login' | 'input' | 'saving' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
+  const [tags, setTags] = useState<Tag[]>([]);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const [newTagName, setNewTagName] = useState('');
+  const [isAddingTag, setIsAddingTag] = useState(false);
   const supabase = createClient();
+
+  const LAST_TAGS_KEY = 'threadclip_last_tags';
+
+  const fetchTags = async () => {
+    try {
+      const response = await fetch('/api/tags');
+      const { data } = await response.json();
+      setTags(data || []);
+    } catch (error) {
+      console.error('Failed to fetch tags:', error);
+    }
+  };
+
+  const handleAddTag = async () => {
+    if (!newTagName.trim()) return;
+    
+    setIsAddingTag(true);
+    try {
+      const response = await fetch('/api/tags', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newTagName.trim() }),
+      });
+      
+      if (response.ok) {
+        const { data } = await response.json();
+        setTags(prev => [...prev, data]);
+        setSelectedTagIds(prev => [...prev, data.id]);
+        setNewTagName('');
+      } else if (response.status === 409) {
+        showToast('이미 존재하는 카테고리입니다', 'error');
+      }
+    } catch {
+      showToast(t.common.error, 'error');
+    } finally {
+      setIsAddingTag(false);
+    }
+  };
+
+  const toggleTag = (tagId: string) => {
+    setSelectedTagIds(prev => 
+      prev.includes(tagId) 
+        ? prev.filter(id => id !== tagId)
+        : [...prev, tagId]
+    );
+  };
 
   useEffect(() => {
     async function checkAuth() {
@@ -22,6 +74,16 @@ function ShareTargetContent() {
       if (!user) {
         setStatus('login');
         return;
+      }
+
+      await fetchTags();
+      const savedTags = localStorage.getItem(LAST_TAGS_KEY);
+      if (savedTags) {
+        try {
+          setSelectedTagIds(JSON.parse(savedTags));
+        } catch {
+          setSelectedTagIds([]);
+        }
       }
 
       const url = searchParams.get('url') || searchParams.get('text');
@@ -63,10 +125,11 @@ function ShareTargetContent() {
       const response = await fetch('/api/threads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: threadsUrl, memo: memo.trim() }),
+        body: JSON.stringify({ url: threadsUrl, memo: memo.trim(), tagIds: selectedTagIds }),
       });
 
       if (response.ok || response.status === 409) {
+        localStorage.setItem(LAST_TAGS_KEY, JSON.stringify(selectedTagIds));
         setStatus('success');
         setMessage(t.pwa.shareTargetSuccess);
         setTimeout(() => router.push('/?saved=true'), 1500);
@@ -169,7 +232,7 @@ function ShareTargetContent() {
 
   return (
     <div className="min-h-screen flex items-center justify-center gradient-bg p-4">
-      <div className="w-full max-w-md bg-[var(--color-bg-card)] rounded-2xl p-6 shadow-xl">
+      <div className="w-full max-w-md bg-[var(--color-bg-card)] rounded-2xl p-6 shadow-xl max-h-[90vh] overflow-y-auto">
         <h1 className="text-xl font-bold text-[var(--color-text)] mb-4 flex items-center gap-2">
           <svg className="w-6 h-6 text-[var(--color-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
@@ -200,6 +263,60 @@ function ShareTargetContent() {
           </p>
         </div>
 
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
+            카테고리 (선택)
+          </label>
+          
+          <div className="flex flex-wrap gap-2 mb-3">
+            {tags.map(tag => (
+              <button
+                key={tag.id}
+                type="button"
+                onClick={() => toggleTag(tag.id)}
+                className={`px-3 py-1.5 text-sm rounded-full transition-all ${
+                  selectedTagIds.includes(tag.id)
+                    ? 'bg-[var(--color-primary)] text-white'
+                    : 'bg-[var(--color-bg-elevated)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]'
+                }`}
+              >
+                {tag.name}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={newTagName}
+              onChange={(e) => setNewTagName(e.target.value)}
+              placeholder="새 카테고리 추가..."
+              className="input flex-1 !py-2 text-sm"
+              disabled={isAddingTag}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleAddTag();
+                }
+              }}
+            />
+            <button
+              type="button"
+              onClick={handleAddTag}
+              className="btn btn-secondary !py-2 !px-3"
+              disabled={isAddingTag || !newTagName.trim()}
+            >
+              {isAddingTag ? (
+                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+              )}
+            </button>
+          </div>
+        </div>
+
         <div className="flex gap-3">
           <button
             onClick={() => router.push('/')}
@@ -216,6 +333,7 @@ function ShareTargetContent() {
           </button>
         </div>
       </div>
+      <ToastContainer />
     </div>
   );
 }
