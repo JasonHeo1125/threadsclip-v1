@@ -51,7 +51,7 @@ export const translations = {
       alreadySaved: '이미 저장된 쓰레드입니다',
       invalidUrl: '유효한 Threads 링크가 아닙니다',
       deleteConfirm: '이 쓰레드를 삭제하시겠습니까?',
-      maxReached: '저장 한도(100개)에 도달했습니다',
+      maxReached: '저장 한도(200개)에 도달했습니다',
     },
     // 태그
     tag: {
@@ -138,7 +138,7 @@ export const translations = {
       alreadySaved: 'This thread is already saved',
       invalidUrl: 'Invalid Threads link',
       deleteConfirm: 'Delete this thread?',
-      maxReached: 'Storage limit reached (100 threads)',
+      maxReached: 'Storage limit reached (200 threads)',
     },
     // Tags
     tag: {

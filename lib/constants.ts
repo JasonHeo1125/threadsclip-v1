@@ -1,0 +1,5 @@
+export const STORAGE_LIMITS = {
+  FREE_TIER: 200,
+  WARNING_THRESHOLD: 20,
+  DANGER_THRESHOLD: 10,
+} as const;

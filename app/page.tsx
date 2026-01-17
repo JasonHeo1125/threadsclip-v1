@@ -11,6 +11,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { ThreadListSkeleton } from '@/components/ui/Loading';
 import { ToastContainer, showToast } from '@/components/ui/Toast';
 import { createClient } from '@/lib/supabase/client';
+import { STORAGE_LIMITS } from '@/lib/constants';
 import type { SavedThread, Tag, Profile } from '@/types/database';
 
 type ThreadWithTags = SavedThread & { tags: Tag[] };
@@ -34,6 +35,7 @@ export default function HomePage() {
   const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
   const [allTags, setAllTags] = useState<Tag[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isLimitPopupOpen, setIsLimitPopupOpen] = useState(false);
   const offsetRef = useRef(0);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
@@ -214,6 +216,17 @@ export default function HomePage() {
     return allTags.find(tag => tag.id === selectedTagId)?.name;
   };
 
+  const getStorageCountColor = () => {
+    const remaining = STORAGE_LIMITS.FREE_TIER - total;
+    if (remaining <= STORAGE_LIMITS.DANGER_THRESHOLD) {
+      return 'text-red-500';
+    }
+    if (remaining <= STORAGE_LIMITS.WARNING_THRESHOLD) {
+      return 'text-yellow-500';
+    }
+    return 'text-[var(--color-text-muted)]';
+  };
+
   return (
     <div className="min-h-screen bg-[var(--color-bg)]">
       <Header user={profile} onAddClick={() => setIsModalOpen(true)} />
@@ -227,15 +240,41 @@ export default function HomePage() {
           />
         </div>
 
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-[var(--color-text)]">
-            {t.home.title}
-            {total > 0 && (
-              <span className="ml-2 text-sm font-normal text-[var(--color-text-muted)]">
-                ({total})
-              </span>
+        <div className="flex items-center justify-between mb-4 relative">
+          <div className="relative">
+            <h2 className="text-lg font-semibold text-[var(--color-text)]">
+              {t.home.title}
+              <button
+                onClick={() => setIsLimitPopupOpen(true)}
+                className={`ml-2 text-sm font-normal ${getStorageCountColor()} hover:underline cursor-pointer`}
+              >
+                ({total}/{STORAGE_LIMITS.FREE_TIER})
+              </button>
+            </h2>
+
+            {isLimitPopupOpen && (
+              <>
+                <div 
+                  className="fixed inset-0 z-10" 
+                  onClick={() => setIsLimitPopupOpen(false)}
+                />
+                <div className="absolute left-0 top-full mt-2 bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-lg shadow-lg z-20 p-4 w-64">
+                  <p className="text-sm text-[var(--color-text)]">
+                    무료 티어는 현재 <strong>{STORAGE_LIMITS.FREE_TIER}개</strong>까지 저장 가능합니다.
+                  </p>
+                  <p className="text-xs text-[var(--color-text-muted)] mt-2">
+                    더 많은 저장 공간이 필요하시면 프로 플랜을 이용해주세요.
+                  </p>
+                  <button
+                    onClick={() => setIsLimitPopupOpen(false)}
+                    className="mt-3 text-xs text-[var(--color-primary)] hover:underline"
+                  >
+                    닫기
+                  </button>
+                </div>
+              </>
             )}
-          </h2>
+          </div>
 
           <div className="flex items-center gap-2">
             <button

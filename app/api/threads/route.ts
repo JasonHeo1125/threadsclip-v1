@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getThreadsOEmbed, extractTextFromHtml, isValidThreadsUrl, extractUsernameFromUrl } from '@/lib/threads/oembed';
+import { STORAGE_LIMITS } from '@/lib/constants';
 
 function cleanThreadsUrl(url: string): string {
   try {
@@ -34,8 +35,8 @@ export async function POST(request: Request) {
       .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id);
 
-    if (count && count >= 100) {
-      return NextResponse.json({ error: 'Storage limit reached (100 threads)' }, { status: 429 });
+    if (count && count >= STORAGE_LIMITS.FREE_TIER) {
+      return NextResponse.json({ error: `Storage limit reached (${STORAGE_LIMITS.FREE_TIER} threads)` }, { status: 429 });
     }
 
     const { data: existing } = await supabase
