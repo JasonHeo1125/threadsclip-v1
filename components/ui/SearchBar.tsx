@@ -38,7 +38,7 @@ export function SearchBar({ value, onChange, onSearch }: SearchBarProps) {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={t.home.searchPlaceholder}
-        className="input pl-14 pr-4"
+        className="input !pl-12 pr-4"
       />
     </form>
   );

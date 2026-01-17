@@ -10,11 +10,11 @@ import { SaveThreadModal } from '@/components/thread/SaveThreadModal';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ThreadListSkeleton } from '@/components/ui/Loading';
 import { ToastContainer, showToast } from '@/components/ui/Toast';
-import { AdBannerPlaceholder } from '@/components/ui/AdBanner';
 import { createClient } from '@/lib/supabase/client';
 import type { SavedThread, Tag, Profile } from '@/types/database';
 
 type ThreadWithTags = SavedThread & { tags: Tag[] };
+type SortOrder = 'newest' | 'oldest';
 
 export default function HomePage() {
   const { t } = useTranslation();
@@ -25,6 +25,11 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [sortOrder, setSortOrder] = useState<SortOrder>('newest');
+  const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
+  const [allTags, setAllTags] = useState<Tag[]>([]);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [displayCount, setDisplayCount] = useState(10);
   const supabase = createClient();
 
   useEffect(() => {
@@ -49,6 +54,16 @@ export default function HomePage() {
     }
   }, [t.common.error]);
 
+  const fetchTags = useCallback(async () => {
+    try {
+      const response = await fetch('/api/tags');
+      const { data } = await response.json();
+      setAllTags(data || []);
+    } catch (error) {
+      console.error('Failed to fetch tags:', error);
+    }
+  }, []);
+
   const fetchProfile = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
@@ -64,31 +79,48 @@ export default function HomePage() {
   useEffect(() => {
     fetchProfile();
     fetchThreads();
-  }, [fetchProfile, fetchThreads]);
+    fetchTags();
+  }, [fetchProfile, fetchThreads, fetchTags]);
 
   useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredThreads(threads);
-      return;
+    let result = [...threads];
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(
+        (thread) =>
+          thread.memo?.toLowerCase().includes(query) ||
+          thread.author_name?.toLowerCase().includes(query) ||
+          thread.author_username?.toLowerCase().includes(query) ||
+          thread.tags?.some((tag) => tag.name.toLowerCase().includes(query))
+      );
     }
 
-    const query = searchQuery.toLowerCase();
-    const filtered = threads.filter(
-      (thread) =>
-        thread.memo?.toLowerCase().includes(query) ||
-        thread.author_name?.toLowerCase().includes(query) ||
-        thread.author_username?.toLowerCase().includes(query) ||
-        thread.tags?.some((tag) => tag.name.toLowerCase().includes(query))
-    );
-    setFilteredThreads(filtered);
-  }, [searchQuery, threads]);
+    if (selectedTagId) {
+      result = result.filter((thread) =>
+        thread.tags?.some((tag) => tag.id === selectedTagId)
+      );
+    }
 
-  const handleSaveThread = async (url: string, memo: string) => {
+    result.sort((a, b) => {
+      const dateA = new Date(a.created_at).getTime();
+      const dateB = new Date(b.created_at).getTime();
+      return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
+    });
+
+    setFilteredThreads(result);
+    setDisplayCount(10);
+  }, [searchQuery, threads, sortOrder, selectedTagId]);
+
+  const displayedThreads = filteredThreads.slice(0, displayCount);
+  const hasMore = displayCount < filteredThreads.length;
+
+  const handleSaveThread = async (url: string, memo: string, tagIds: string[] = []) => {
     try {
       const response = await fetch('/api/threads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, memo }),
+        body: JSON.stringify({ url, memo, tagIds }),
       });
 
       const result = await response.json();
@@ -107,6 +139,7 @@ export default function HomePage() {
 
       showToast(t.thread.saved, 'success');
       fetchThreads();
+      fetchTags();
     } catch {
       throw new Error('Save failed');
     }
@@ -136,13 +169,16 @@ export default function HomePage() {
     if (!searchQuery.trim()) return;
   };
 
+  const getSelectedTagName = () => {
+    if (!selectedTagId) return null;
+    return allTags.find(tag => tag.id === selectedTagId)?.name;
+  };
+
   return (
     <div className="min-h-screen bg-[var(--color-bg)]">
       <Header user={profile} onAddClick={() => setIsModalOpen(true)} />
 
       <main className="max-w-3xl mx-auto px-4 py-6">
-        <AdBannerPlaceholder className="mb-6" />
-
         <div className="mb-6">
           <SearchBar
             value={searchQuery}
@@ -160,6 +196,75 @@ export default function HomePage() {
               </span>
             )}
           </h2>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest')}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg bg-[var(--color-bg-elevated)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)] transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+              </svg>
+              {sortOrder === 'newest' ? '최신순' : '오래된순'}
+            </button>
+
+            <div className="relative">
+              <button
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                  selectedTagId
+                    ? 'bg-[var(--color-primary)] text-white'
+                    : 'bg-[var(--color-bg-elevated)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]'
+                }`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+                {selectedTagId ? getSelectedTagName() : '필터'}
+              </button>
+
+              {isFilterOpen && (
+                <>
+                  <div 
+                    className="fixed inset-0 z-10" 
+                    onClick={() => setIsFilterOpen(false)}
+                  />
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-lg shadow-lg z-20 py-1 max-h-64 overflow-y-auto">
+                    <button
+                      onClick={() => {
+                        setSelectedTagId(null);
+                        setIsFilterOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-2 text-sm hover:bg-[var(--color-bg-elevated)] transition-colors ${
+                        !selectedTagId ? 'text-[var(--color-primary)] font-medium' : 'text-[var(--color-text)]'
+                      }`}
+                    >
+                      전체
+                    </button>
+                    {allTags.map((tag) => (
+                      <button
+                        key={tag.id}
+                        onClick={() => {
+                          setSelectedTagId(tag.id);
+                          setIsFilterOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-2 text-sm hover:bg-[var(--color-bg-elevated)] transition-colors ${
+                          selectedTagId === tag.id ? 'text-[var(--color-primary)] font-medium' : 'text-[var(--color-text)]'
+                        }`}
+                      >
+                        {tag.name}
+                      </button>
+                    ))}
+                    {allTags.length === 0 && (
+                      <p className="px-4 py-2 text-sm text-[var(--color-text-muted)]">
+                        카테고리 없음
+                      </p>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
         </div>
 
         {isLoading ? (
@@ -184,23 +289,34 @@ export default function HomePage() {
             }
           />
         ) : (
-          <div className="space-y-4">
-            {filteredThreads.map((thread, index) => (
-              <div
-                key={thread.id}
-                className="animate-fade-in"
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
-                <ThreadCard
-                  thread={thread}
-                  onDelete={handleDeleteThread}
-                />
+          <>
+            <div className="space-y-4">
+              {displayedThreads.map((thread, index) => (
+                <div
+                  key={thread.id}
+                  className="animate-fade-in"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <ThreadCard
+                    thread={thread}
+                    onDelete={handleDeleteThread}
+                  />
+                </div>
+              ))}
+            </div>
+            
+            {hasMore && (
+              <div className="mt-6 flex justify-center">
+                <button
+                  onClick={() => setDisplayCount((prev) => prev + 10)}
+                  className="px-6 py-2 text-sm font-medium text-[var(--color-text-secondary)] bg-[var(--color-bg-elevated)] hover:bg-[var(--color-border)] rounded-lg transition-colors"
+                >
+                  더 보기 ({filteredThreads.length - displayCount}개 남음)
+                </button>
               </div>
-            ))}
-          </div>
+            )}
+          </>
         )}
-
-        <AdBannerPlaceholder className="mt-8" />
       </main>
 
       <SaveThreadModal

@@ -21,7 +21,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { url, memo } = await request.json();
+    const { url, memo, tagIds = [] } = await request.json();
     
     if (!url || !isValidThreadsUrl(url)) {
       return NextResponse.json({ error: 'Invalid Threads URL' }, { status: 400 });
@@ -62,17 +62,28 @@ export async function POST(request: Request) {
       memo: memo || null,
     };
 
-    const { data, error } = await supabase
+    const { data: savedThread, error } = await supabase
       .from('saved_threads')
       .insert(threadData as never)
       .select()
-      .single();
+      .single() as { data: { id: string } | null; error: unknown };
 
     if (error) {
       throw error;
     }
 
-    return NextResponse.json({ success: true, data });
+    if (tagIds.length > 0 && savedThread) {
+      const threadTagsData = tagIds.map((tagId: string) => ({
+        thread_id: savedThread.id,
+        tag_id: tagId,
+      }));
+
+      await supabase
+        .from('thread_tags')
+        .insert(threadTagsData as never);
+    }
+
+    return NextResponse.json({ success: true, data: savedThread });
   } catch (error) {
     console.error('Save thread error:', error);
     return NextResponse.json(
