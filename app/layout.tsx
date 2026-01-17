@@ -70,6 +70,14 @@ export default function RootLayout({
         <I18nProvider>
           {children}
         </I18nProvider>
+        <Script id="register-sw" strategy="afterInteractive">
+          {`
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.register('/sw.js')
+                .catch(function(err) { console.error('SW registration failed:', err); });
+            }
+          `}
+        </Script>
       </body>
     </html>
   );
