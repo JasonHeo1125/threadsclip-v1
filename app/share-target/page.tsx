@@ -132,7 +132,6 @@ function ShareTargetContent() {
         localStorage.setItem(LAST_TAGS_KEY, JSON.stringify(selectedTagIds));
         setStatus('success');
         setMessage(t.pwa.shareTargetSuccess);
-        setTimeout(() => router.push('/?saved=true'), 1500);
       } else {
         throw new Error('Save failed');
       }
@@ -209,7 +208,22 @@ function ShareTargetContent() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <p className="text-xl font-medium">{message}</p>
+          <p className="text-xl font-medium mb-8">{message}</p>
+          
+          <div className="flex flex-col gap-3 max-w-xs mx-auto">
+            <button
+              onClick={() => window.close()}
+              className="px-6 py-3 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors font-medium"
+            >
+              Threads로 돌아가기
+            </button>
+            <button
+              onClick={() => router.push('/')}
+              className="px-6 py-3 bg-white text-[var(--color-primary)] rounded-lg hover:bg-white/90 transition-colors font-medium"
+            >
+              저장 목록 확인하기
+            </button>
+          </div>
         </div>
       </div>
     );
