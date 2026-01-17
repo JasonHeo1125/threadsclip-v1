@@ -181,7 +181,7 @@ function LoginContent() {
               href="https://www.threads.net/@all_dayjs" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="hover:text-[var(--color-primary)] transition-colors"
+              className="text-[var(--color-text)] hover:text-[var(--color-primary)] transition-colors"
             >
               {language === 'ko' ? '문의 : @all_dayjs' : 'Contact : @all_dayjs'}
             </a>
