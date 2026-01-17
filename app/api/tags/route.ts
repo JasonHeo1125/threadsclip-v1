@@ -66,6 +66,47 @@ export async function POST(request: Request) {
   }
 }
 
+export async function PUT(request: Request) {
+  try {
+    const supabase = await createClient();
+    
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id, name } = await request.json();
+
+    if (!id) {
+      return NextResponse.json({ error: 'Tag ID required' }, { status: 400 });
+    }
+
+    if (!name?.trim()) {
+      return NextResponse.json({ error: 'Tag name required' }, { status: 400 });
+    }
+
+    const { data, error } = await supabase
+      .from('tags')
+      .update({ name: name.trim() } as never)
+      .eq('id', id)
+      .eq('user_id', user.id)
+      .select()
+      .single();
+
+    if (error) {
+      if (error.code === '23505') {
+        return NextResponse.json({ error: 'Tag already exists' }, { status: 409 });
+      }
+      throw error;
+    }
+
+    return NextResponse.json({ success: true, data });
+  } catch (error) {
+    console.error('Update tag error:', error);
+    return NextResponse.json({ error: 'Failed to update tag' }, { status: 500 });
+  }
+}
+
 export async function DELETE(request: Request) {
   try {
     const supabase = await createClient();
