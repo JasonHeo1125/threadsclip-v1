@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from '@/lib/i18n';
 import { Header } from '@/components/ui/Header';
@@ -16,20 +16,25 @@ import type { SavedThread, Tag, Profile } from '@/types/database';
 type ThreadWithTags = SavedThread & { tags: Tag[] };
 type SortOrder = 'newest' | 'oldest';
 
+const ITEMS_PER_PAGE = 10;
+
 export default function HomePage() {
   const { t } = useTranslation();
   const router = useRouter();
   const [threads, setThreads] = useState<ThreadWithTags[]>([]);
-  const [filteredThreads, setFilteredThreads] = useState<ThreadWithTags[]>([]);
+  const [total, setTotal] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [sortOrder, setSortOrder] = useState<SortOrder>('newest');
   const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
   const [allTags, setAllTags] = useState<Tag[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [displayCount, setDisplayCount] = useState(10);
+  const offsetRef = useRef(0);
   const supabase = createClient();
 
   useEffect(() => {
@@ -40,19 +45,55 @@ export default function HomePage() {
     }
   }, [router]);
 
-  const fetchThreads = useCallback(async () => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const fetchThreads = useCallback(async (reset = true) => {
     try {
-      const response = await fetch('/api/threads');
-      const { data } = await response.json();
-      setThreads(data || []);
-      setFilteredThreads(data || []);
+      if (reset) {
+        setIsLoading(true);
+        offsetRef.current = 0;
+      } else {
+        setIsLoadingMore(true);
+      }
+
+      const params = new URLSearchParams({
+        limit: ITEMS_PER_PAGE.toString(),
+        offset: offsetRef.current.toString(),
+        sortOrder,
+      });
+
+      if (debouncedSearch) {
+        params.set('search', debouncedSearch);
+      }
+      if (selectedTagId) {
+        params.set('tagId', selectedTagId);
+      }
+
+      const response = await fetch(`/api/threads?${params}`);
+      const { data, total: totalCount, hasMore: more } = await response.json();
+
+      if (reset) {
+        setThreads(data || []);
+      } else {
+        setThreads(prev => [...prev, ...(data || [])]);
+      }
+      
+      setTotal(totalCount || 0);
+      setHasMore(more || false);
+      offsetRef.current += ITEMS_PER_PAGE;
     } catch (error) {
       console.error('Failed to fetch threads:', error);
       showToast(t.common.error, 'error');
     } finally {
       setIsLoading(false);
+      setIsLoadingMore(false);
     }
-  }, [t.common.error]);
+  }, [debouncedSearch, selectedTagId, sortOrder, t.common.error]);
 
   const fetchTags = useCallback(async () => {
     try {
@@ -78,42 +119,18 @@ export default function HomePage() {
 
   useEffect(() => {
     fetchProfile();
-    fetchThreads();
     fetchTags();
-  }, [fetchProfile, fetchThreads, fetchTags]);
+  }, [fetchProfile, fetchTags]);
 
   useEffect(() => {
-    let result = [...threads];
+    fetchThreads(true);
+  }, [debouncedSearch, selectedTagId, sortOrder, fetchThreads]);
 
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(
-        (thread) =>
-          thread.memo?.toLowerCase().includes(query) ||
-          thread.author_name?.toLowerCase().includes(query) ||
-          thread.author_username?.toLowerCase().includes(query) ||
-          thread.tags?.some((tag) => tag.name.toLowerCase().includes(query))
-      );
+  const handleLoadMore = () => {
+    if (!isLoadingMore && hasMore) {
+      fetchThreads(false);
     }
-
-    if (selectedTagId) {
-      result = result.filter((thread) =>
-        thread.tags?.some((tag) => tag.id === selectedTagId)
-      );
-    }
-
-    result.sort((a, b) => {
-      const dateA = new Date(a.created_at).getTime();
-      const dateB = new Date(b.created_at).getTime();
-      return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
-    });
-
-    setFilteredThreads(result);
-    setDisplayCount(10);
-  }, [searchQuery, threads, sortOrder, selectedTagId]);
-
-  const displayedThreads = filteredThreads.slice(0, displayCount);
-  const hasMore = displayCount < filteredThreads.length;
+  };
 
   const handleSaveThread = async (url: string, memo: string, tagIds: string[] = []) => {
     try {
@@ -138,7 +155,7 @@ export default function HomePage() {
       }
 
       showToast(t.thread.saved, 'success');
-      fetchThreads();
+      fetchThreads(true);
       fetchTags();
     } catch {
       throw new Error('Save failed');
@@ -158,15 +175,20 @@ export default function HomePage() {
       }
 
       setThreads((prev) => prev.filter((thread) => thread.id !== id));
-      setFilteredThreads((prev) => prev.filter((thread) => thread.id !== id));
+      setTotal((prev) => prev - 1);
       showToast(t.common.success, 'success');
     } catch {
       showToast(t.common.error, 'error');
     }
   };
 
-  const handleSearch = () => {
-    if (!searchQuery.trim()) return;
+  const handleSortChange = () => {
+    setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest');
+  };
+
+  const handleTagFilter = (tagId: string | null) => {
+    setSelectedTagId(tagId);
+    setIsFilterOpen(false);
   };
 
   const getSelectedTagName = () => {
@@ -183,23 +205,23 @@ export default function HomePage() {
           <SearchBar
             value={searchQuery}
             onChange={setSearchQuery}
-            onSearch={handleSearch}
+            onSearch={() => {}}
           />
         </div>
 
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-[var(--color-text)]">
             {t.home.title}
-            {filteredThreads.length > 0 && (
+            {total > 0 && (
               <span className="ml-2 text-sm font-normal text-[var(--color-text-muted)]">
-                ({filteredThreads.length})
+                ({total})
               </span>
             )}
           </h2>
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest')}
+              onClick={handleSortChange}
               className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg bg-[var(--color-bg-elevated)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)] transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -231,10 +253,7 @@ export default function HomePage() {
                   />
                   <div className="absolute right-0 top-full mt-2 w-48 bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-lg shadow-lg z-20 py-1 max-h-64 overflow-y-auto">
                     <button
-                      onClick={() => {
-                        setSelectedTagId(null);
-                        setIsFilterOpen(false);
-                      }}
+                      onClick={() => handleTagFilter(null)}
                       className={`w-full text-left px-4 py-2 text-sm hover:bg-[var(--color-bg-elevated)] transition-colors ${
                         !selectedTagId ? 'text-[var(--color-primary)] font-medium' : 'text-[var(--color-text)]'
                       }`}
@@ -244,10 +263,7 @@ export default function HomePage() {
                     {allTags.map((tag) => (
                       <button
                         key={tag.id}
-                        onClick={() => {
-                          setSelectedTagId(tag.id);
-                          setIsFilterOpen(false);
-                        }}
+                        onClick={() => handleTagFilter(tag.id)}
                         className={`w-full text-left px-4 py-2 text-sm hover:bg-[var(--color-bg-elevated)] transition-colors ${
                           selectedTagId === tag.id ? 'text-[var(--color-primary)] font-medium' : 'text-[var(--color-text)]'
                         }`}
@@ -269,7 +285,7 @@ export default function HomePage() {
 
         {isLoading ? (
           <ThreadListSkeleton count={3} />
-        ) : filteredThreads.length === 0 ? (
+        ) : threads.length === 0 ? (
           <EmptyState
             icon={searchQuery ? 'search' : 'bookmark'}
             title={searchQuery ? t.common.error : undefined}
@@ -291,7 +307,7 @@ export default function HomePage() {
         ) : (
           <>
             <div className="space-y-4">
-              {displayedThreads.map((thread, index) => (
+              {threads.map((thread, index) => (
                 <div
                   key={thread.id}
                   className="animate-fade-in"
@@ -308,10 +324,18 @@ export default function HomePage() {
             {hasMore && (
               <div className="mt-6 flex justify-center">
                 <button
-                  onClick={() => setDisplayCount((prev) => prev + 10)}
-                  className="px-6 py-2 text-sm font-medium text-[var(--color-text-secondary)] bg-[var(--color-bg-elevated)] hover:bg-[var(--color-border)] rounded-lg transition-colors"
+                  onClick={handleLoadMore}
+                  disabled={isLoadingMore}
+                  className="px-6 py-2 text-sm font-medium text-[var(--color-text-secondary)] bg-[var(--color-bg-elevated)] hover:bg-[var(--color-border)] rounded-lg transition-colors disabled:opacity-50"
                 >
-                  더 보기 ({filteredThreads.length - displayCount}개 남음)
+                  {isLoadingMore ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      로딩 중...
+                    </div>
+                  ) : (
+                    `더 보기`
+                  )}
                 </button>
               </div>
             )}

@@ -93,7 +93,7 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const supabase = await createClient();
     
@@ -101,6 +101,13 @@ export async function GET() {
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const { searchParams } = new URL(request.url);
+    const limit = parseInt(searchParams.get('limit') || '10');
+    const offset = parseInt(searchParams.get('offset') || '0');
+    const search = searchParams.get('search') || '';
+    const tagId = searchParams.get('tagId') || '';
+    const sortOrder = searchParams.get('sortOrder') || 'newest';
 
     interface ThreadWithJoins {
       id: string;
@@ -116,7 +123,7 @@ export async function GET() {
       thread_tags?: Array<{ tag_id: string; tags: unknown }>;
     }
 
-    const { data, error } = await supabase
+    let query = supabase
       .from('saved_threads')
       .select(`
         *,
@@ -124,20 +131,42 @@ export async function GET() {
           tag_id,
           tags (*)
         )
-      `)
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false }) as { data: ThreadWithJoins[] | null; error: unknown };
+      `, { count: 'exact' })
+      .eq('user_id', user.id);
+
+    if (search) {
+      query = query.or(`memo.ilike.%${search}%,author_name.ilike.%${search}%,author_username.ilike.%${search}%`);
+    }
+
+    query = query.order('created_at', { ascending: sortOrder === 'oldest' });
+    query = query.range(offset, offset + limit - 1);
+
+    const { data, error, count } = await query as { 
+      data: ThreadWithJoins[] | null; 
+      error: unknown;
+      count: number | null;
+    };
 
     if (error) {
       throw error;
     }
 
-    const threadsWithTags = (data || []).map(thread => ({
+    let threadsWithTags = (data || []).map(thread => ({
       ...thread,
       tags: thread.thread_tags?.map((tt) => tt.tags) || [],
     }));
 
-    return NextResponse.json({ data: threadsWithTags });
+    if (tagId) {
+      threadsWithTags = threadsWithTags.filter(thread => 
+        thread.tags?.some((tag: unknown) => (tag as { id?: string })?.id === tagId)
+      );
+    }
+
+    return NextResponse.json({ 
+      data: threadsWithTags,
+      total: count || 0,
+      hasMore: (offset + limit) < (count || 0)
+    });
   } catch (error) {
     console.error('Get threads error:', error);
     return NextResponse.json(
