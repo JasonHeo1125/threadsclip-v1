@@ -10,7 +10,7 @@ git pull origin main
 
 if git diff HEAD@{1} HEAD --name-only | grep -q "package-lock.json"; then
   echo "📦 package-lock.json changed, running npm ci..."
-  npm ci
+  npm ci --include=dev
 else
   echo "✅ No package changes, skipping npm install"
 fi
