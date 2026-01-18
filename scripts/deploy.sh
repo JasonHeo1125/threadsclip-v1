@@ -17,9 +17,7 @@ fi
 
 echo "🔨 Building application..."
 rm -f .next/lock
-npx next build
-cp -r .next/static .next/standalone/.next/
-cp -r public .next/standalone/
+npm run build
 
 echo "♻️  Restarting PM2..."
 pm2 restart threadclip --update-env
