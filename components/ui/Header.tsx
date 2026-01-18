@@ -32,7 +32,7 @@ export function Header({ user, onAddClick }: HeaderProps) {
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-[var(--color-bg)]/80 backdrop-blur-lg border-b border-[var(--color-border)]">
+    <header className="sticky top-0 z-50 bg-[var(--color-bg)]/80 backdrop-blur-lg border-b border-[var(--color-border)]">
       <div className="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg gradient-bg flex items-center justify-center">
@@ -45,7 +45,7 @@ export function Header({ user, onAddClick }: HeaderProps) {
           </h1>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 relative z-50">
           <button
             onClick={onAddClick}
             className="btn btn-primary px-4 py-2 text-sm"
@@ -58,7 +58,7 @@ export function Header({ user, onAddClick }: HeaderProps) {
 
           <button
             onClick={toggleLanguage}
-            className="btn btn-ghost px-3 py-2 text-sm"
+            className="btn btn-ghost px-3 py-2 text-sm relative z-50"
           >
             {language === 'ko' ? 'EN' : '한국어'}
           </button>
