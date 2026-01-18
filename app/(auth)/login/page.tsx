@@ -263,7 +263,7 @@ function LoginContent() {
       
       <button
         onClick={toggleLanguage}
-        className="absolute top-6 right-6 btn btn-ghost text-sm"
+        className="absolute top-6 right-6 btn btn-ghost text-sm z-[60]"
       >
         {language === 'ko' ? 'EN' : '한국어'}
       </button>
