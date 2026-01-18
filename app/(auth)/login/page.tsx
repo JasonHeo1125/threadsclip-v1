@@ -37,6 +37,16 @@ function LoginContent() {
     }
   };
 
+  const handleKakaoLogin = async () => {
+    setIsLoading(true);
+    try {
+      await signIn('kakao', { callbackUrl: '/' });
+    } catch (error) {
+      console.error('Login error:', error);
+      setIsLoading(false);
+    }
+  };
+
   const toggleLanguage = () => {
     setLanguage(language === 'ko' ? 'en' : 'ko');
   };
@@ -111,6 +121,26 @@ function LoginContent() {
               </div>
             </div>
             
+            {/* 카카오 로그인 버튼 */}
+            <button
+              onClick={handleKakaoLogin}
+              disabled={isLoading}
+              className="btn w-full text-[#191919] border-0 hover:shadow-md transition-all"
+              style={{ backgroundColor: '#FEE500' }}
+            >
+              {isLoading ? (
+                <div className="w-5 h-5 border-2 border-[#191919] border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#191919">
+                    <path d="M12 3C6.477 3 2 6.463 2 10.691c0 2.68 1.784 5.036 4.478 6.376-.176.649-.638 2.351-.731 2.714-.115.451.165.445.348.324.143-.095 2.282-1.545 3.206-2.171.551.078 1.118.118 1.699.118 5.523 0 10-3.463 10-7.691C22 6.463 17.523 3 12 3z"/>
+                  </svg>
+                  {language === 'ko' ? '카카오로 로그인' : 'Login with Kakao'}
+                </>
+              )}
+            </button>
+
+            {/* Google 로그인 버튼 */}
             <button
               onClick={handleGoogleLogin}
               disabled={isLoading}
@@ -142,6 +172,13 @@ function LoginContent() {
                 </>
               )}
             </button>
+            
+            {/* Google 로그인 안내 */}
+            <p className="text-xs text-[var(--color-text-muted)] text-center">
+              {language === 'ko' 
+                ? '⚠️ Google 로그인이 안 되면 Safari에서 열어주세요'
+                : '⚠️ If Google login fails, please open in Safari'}
+            </p>
           </div>
           
           <div className="mt-6 pt-6 border-t border-[var(--color-border)]">
