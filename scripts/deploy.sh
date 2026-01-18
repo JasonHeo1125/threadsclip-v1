@@ -1,44 +1,28 @@
 #!/bin/bash
-
 set -e
 
-echo "🚀 ThreadClip 배포 시작..."
+echo "🚀 Starting deployment..."
 
-APP_DIR="/home/opc/threadsclip"
-REPO_URL="https://github.com/JasonHeo1125/threadsclip-v1.git"
+cd /home/opc/threadsclip
 
-cd /home/opc
+echo "📥 Pulling latest code..."
+git pull origin main
 
-if [ -d "$APP_DIR" ]; then
-    echo "📦 기존 코드 업데이트..."
-    cd $APP_DIR
-    git pull origin main
+if git diff HEAD@{1} HEAD --name-only | grep -q "package-lock.json"; then
+  echo "📦 package-lock.json changed, running npm ci..."
+  npm ci
 else
-    echo "📦 코드 클론..."
-    git clone $REPO_URL threadsclip
-    cd $APP_DIR
+  echo "✅ No package changes, skipping npm install"
 fi
 
-echo "📦 의존성 설치..."
-npm ci --production=false
+echo "🔨 Building application..."
+rm -f .next/lock
+npx next build
+cp -r .next/static .next/standalone/.next/
+cp -r public .next/standalone/
 
-echo "🔨 빌드 중..."
-npm run build
+echo "♻️  Restarting PM2..."
+pm2 restart threadclip --update-env
 
-echo "📁 standalone 폴더에 static/public 복사..."
-cp -r public .next/standalone/public
-cp -r .next/static .next/standalone/.next/static
-
-echo "🔄 PM2 재시작..."
-mkdir -p /home/opc/logs
-
-if pm2 list | grep -q "threadclip"; then
-    pm2 restart threadclip
-else
-    pm2 start ecosystem.config.js
-fi
-
-pm2 save
-
-echo "✅ 배포 완료!"
-echo "🌐 http://$(curl -s ifconfig.me):3000"
+echo "✅ Deployment complete!"
+pm2 logs threadclip --lines 10 --nostream
