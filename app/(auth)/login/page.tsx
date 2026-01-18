@@ -117,33 +117,29 @@ function LoginContent() {
 
     if (platform === 'threads') {
       return {
-        title: language === 'ko' ? 'Threads 앱 내 브라우저' : 'Threads In-App Browser',
+        title: language === 'ko' ? 'Threads 앱 내 브라우저 감지' : 'Threads In-App Browser Detected',
         icon: (
-          <div className="relative">
-            <div className="absolute -top-2 -right-2 flex gap-1">
-              <div className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-              <div className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-              <div className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+          <div className="relative w-full flex justify-end pr-8">
+            <div className="text-6xl animate-bounce">
+              👆
             </div>
-            <svg className="w-16 h-16 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-            </svg>
+            <div className="absolute top-0 right-4 w-3 h-3 bg-purple-500 rounded-full animate-ping" />
           </div>
         ),
         description: language === 'ko' 
           ? (
             <div className="space-y-3">
-              <p className="text-sm text-[var(--color-text-secondary)]">
+              <p className="text-sm text-[var(--color-text-secondary)] text-center">
                 로그인이 제대로 작동하지 않을 수 있습니다.
               </p>
-              <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-3 space-y-2">
-                <div className="flex items-center gap-2 text-purple-400 font-medium text-sm">
+              <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4 space-y-2">
+                <div className="flex items-center gap-2 text-purple-400 font-semibold text-sm">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <span>외부 브라우저에서 열기</span>
+                  <span>Safari에서 접속하기</span>
                 </div>
-                <ol className="text-xs text-[var(--color-text-secondary)] space-y-1.5 pl-7">
+                <ol className="text-sm text-[var(--color-text-secondary)] space-y-2 pl-1">
                   <li className="flex items-start gap-2">
                     <span className="font-bold text-purple-400 flex-shrink-0">1.</span>
                     <span>화면 <strong className="text-purple-400">오른쪽 위 점 3개(⋮)</strong> 탭</span>
@@ -162,17 +158,17 @@ function LoginContent() {
           ) 
           : (
             <div className="space-y-3">
-              <p className="text-sm text-[var(--color-text-secondary)]">
+              <p className="text-sm text-[var(--color-text-secondary)] text-center">
                 Login may not work properly.
               </p>
-              <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-3 space-y-2">
-                <div className="flex items-center gap-2 text-purple-400 font-medium text-sm">
+              <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4 space-y-2">
+                <div className="flex items-center gap-2 text-purple-400 font-semibold text-sm">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <span>Open in External Browser</span>
+                  <span>Access via Safari</span>
                 </div>
-                <ol className="text-xs text-[var(--color-text-secondary)] space-y-1.5 pl-7">
+                <ol className="text-sm text-[var(--color-text-secondary)] space-y-2 pl-1">
                   <li className="flex items-start gap-2">
                     <span className="font-bold text-purple-400 flex-shrink-0">1.</span>
                     <span>Tap <strong className="text-purple-400">three dots (⋮)</strong> at top right</span>
@@ -194,31 +190,29 @@ function LoginContent() {
 
     if (platform === 'kakaotalk') {
       return {
-        title: language === 'ko' ? '카카오톡 앱 내 브라우저' : 'KakaoTalk In-App Browser',
+        title: language === 'ko' ? '카카오톡 앱 내 브라우저 감지' : 'KakaoTalk In-App Browser Detected',
         icon: (
-          <div className="relative">
-            <div className="absolute -bottom-2 -right-2 flex gap-1">
-              <div className="w-2 h-2 bg-yellow-500 rounded-full animate-ping" />
+          <div className="relative w-full flex justify-end pr-8 pb-4">
+            <div className="text-6xl animate-bounce">
+              👇
             </div>
-            <svg className="w-16 h-16 text-yellow-500" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 3C6.477 3 2 6.463 2 10.691c0 2.68 1.784 5.036 4.478 6.376-.176.649-.638 2.351-.731 2.714-.115.451.165.445.348.324.143-.095 2.282-1.545 3.206-2.171.551.078 1.118.118 1.699.118 5.523 0 10-3.463 10-7.691C22 6.463 17.523 3 12 3z"/>
-            </svg>
+            <div className="absolute bottom-0 right-4 w-3 h-3 bg-yellow-500 rounded-full animate-ping" />
           </div>
         ),
         description: language === 'ko' 
           ? (
             <div className="space-y-3">
-              <p className="text-sm text-[var(--color-text-secondary)]">
+              <p className="text-sm text-[var(--color-text-secondary)] text-center">
                 로그인이 제대로 작동하지 않을 수 있습니다.
               </p>
-              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 space-y-2">
-                <div className="flex items-center gap-2 text-yellow-400 font-medium text-sm">
+              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 space-y-2">
+                <div className="flex items-center gap-2 text-yellow-400 font-semibold text-sm">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <span>Safari에서 열기</span>
+                  <span>Safari에서 접속하기</span>
                 </div>
-                <ol className="text-xs text-[var(--color-text-secondary)] space-y-1.5 pl-7">
+                <ol className="text-sm text-[var(--color-text-secondary)] space-y-2 pl-1">
                   <li className="flex items-start gap-2">
                     <span className="font-bold text-yellow-400 flex-shrink-0">1.</span>
                     <span>화면 <strong className="text-yellow-400">오른쪽 하단 공유 버튼(↗)</strong> 탭</span>
@@ -237,17 +231,17 @@ function LoginContent() {
           ) 
           : (
             <div className="space-y-3">
-              <p className="text-sm text-[var(--color-text-secondary)]">
+              <p className="text-sm text-[var(--color-text-secondary)] text-center">
                 Login may not work properly.
               </p>
-              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 space-y-2">
-                <div className="flex items-center gap-2 text-yellow-400 font-medium text-sm">
+              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 space-y-2">
+                <div className="flex items-center gap-2 text-yellow-400 font-semibold text-sm">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <span>Open in Safari</span>
+                  <span>Access via Safari</span>
                 </div>
-                <ol className="text-xs text-[var(--color-text-secondary)] space-y-1.5 pl-7">
+                <ol className="text-sm text-[var(--color-text-secondary)] space-y-2 pl-1">
                   <li className="flex items-start gap-2">
                     <span className="font-bold text-yellow-400 flex-shrink-0">1.</span>
                     <span>Tap <strong className="text-yellow-400">share button (↗)</strong> at bottom right</span>
@@ -324,16 +318,14 @@ function LoginContent() {
           </div>
           
           {warningContent && (
-            <div className="mb-6 p-5 bg-gradient-to-br from-orange-500/5 to-pink-500/5 border border-orange-500/20 rounded-2xl backdrop-blur-sm animate-fade-in">
-              <div className="flex flex-col items-center gap-4">
-                <div className="relative">
-                  {warningContent.icon}
-                </div>
-                <div className="w-full text-center">
-                  <h3 className="font-bold text-lg mb-3 bg-gradient-to-r from-orange-400 to-pink-400 bg-clip-text text-transparent">
+            <div className="mb-6 p-5 bg-gradient-to-br from-orange-500/5 to-pink-500/5 border border-orange-500/20 rounded-2xl backdrop-blur-sm">
+              <div className="flex flex-col gap-3">
+                {warningContent.icon}
+                <div className="w-full">
+                  <h3 className="font-bold text-base mb-3 text-center bg-gradient-to-r from-orange-400 to-pink-400 bg-clip-text text-transparent">
                     {warningContent.title}
                   </h3>
-                  <div className="text-left">
+                  <div>
                     {warningContent.description}
                   </div>
                 </div>
