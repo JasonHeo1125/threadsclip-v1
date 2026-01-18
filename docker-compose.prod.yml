@@ -2,12 +2,9 @@ services:
   threadsclip:
     image: ghcr.io/jasonheo1125/threadsclip-v1:latest
     container_name: threadsclip
-    ports:
-      - "3000:3000"
+    network_mode: host
     restart: unless-stopped
     env_file:
       - .env.production
     environment:
       - NODE_ENV=production
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
