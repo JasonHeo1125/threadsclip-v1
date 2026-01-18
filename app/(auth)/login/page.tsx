@@ -7,9 +7,24 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+function isInAppBrowser() {
+  if (typeof window === 'undefined') return false;
+  
+  const ua = window.navigator.userAgent.toLowerCase();
+  
+  return (
+    (ua.includes('instagram') && !ua.includes('safari')) ||
+    (ua.includes('fban') || ua.includes('fbav')) ||
+    ua.includes('line/') ||
+    ua.includes('kakaotalk') ||
+    (ua.includes('mobile') && !ua.includes('safari') && ua.includes('webkit'))
+  );
+}
+
 function LoginContent() {
   const { t, language, setLanguage } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
+  const [showInAppWarning, setShowInAppWarning] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
   const { status } = useSession();
@@ -26,6 +41,22 @@ function LoginContent() {
       router.push('/');
     }
   }, [status, router]);
+
+  useEffect(() => {
+    if (isInAppBrowser()) {
+      setShowInAppWarning(true);
+    }
+  }, []);
+
+  const openInExternalBrowser = () => {
+    const currentUrl = window.location.href;
+    
+    if (navigator.userAgent.includes('Android')) {
+      window.location.href = `intent://${currentUrl.replace(/^https?:\/\//, '')}#Intent;scheme=https;action=android.intent.action.VIEW;end`;
+    } else {
+      window.location.href = currentUrl;
+    }
+  };
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);
@@ -92,6 +123,35 @@ function LoginContent() {
             </p>
           </div>
           
+          {showInAppWarning && (
+            <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+              <div className="flex items-start gap-3">
+                <svg className="w-6 h-6 text-yellow-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <div className="flex-1 text-left">
+                  <h3 className="font-semibold text-yellow-500 mb-2">
+                    {language === 'ko' ? '앱 내 브라우저 감지됨' : 'In-App Browser Detected'}
+                  </h3>
+                  <p className="text-sm text-[var(--color-text-secondary)] mb-3">
+                    {language === 'ko' 
+                      ? '로그인이 제대로 작동하지 않을 수 있습니다. Safari나 Chrome에서 열어주세요.' 
+                      : 'Login may not work properly. Please open in Safari or Chrome.'}
+                  </p>
+                  <button
+                    onClick={openInExternalBrowser}
+                    className="btn btn-primary w-full text-sm"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                    {language === 'ko' ? 'Safari/Chrome에서 열기' : 'Open in Safari/Chrome'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          
           <div className="space-y-4">
             <h2 className="text-xl font-semibold text-[var(--color-text)]">
               {language === 'ko' ? '시작하기 전에' : 'Before you start'}
@@ -121,7 +181,6 @@ function LoginContent() {
               </div>
             </div>
             
-            {/* 카카오 로그인 버튼 */}
             <button
               onClick={handleKakaoLogin}
               disabled={isLoading}
@@ -140,7 +199,6 @@ function LoginContent() {
               )}
             </button>
 
-            {/* Google 로그인 버튼 */}
             <button
               onClick={handleGoogleLogin}
               disabled={isLoading}
@@ -173,12 +231,13 @@ function LoginContent() {
               )}
             </button>
             
-            {/* Google 로그인 안내 */}
-            <p className="text-xs text-[var(--color-text-muted)] text-center">
-              {language === 'ko' 
-                ? '⚠️ Google 로그인이 안 되면 외부 브라우저(Safari, Chrome)에서 열어주세요'
-                : '⚠️ If Google login fails, please open in external browser (Safari, Chrome)'}
-            </p>
+            {!showInAppWarning && (
+              <p className="text-xs text-[var(--color-text-muted)] text-center">
+                {language === 'ko' 
+                  ? '⚠️ Google 로그인이 안 되면 외부 브라우저(Safari, Chrome)에서 열어주세요'
+                  : '⚠️ If Google login fails, please open in external browser (Safari, Chrome)'}
+              </p>
+            )}
           </div>
           
           <div className="mt-6 pt-6 border-t border-[var(--color-border)]">
