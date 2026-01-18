@@ -118,14 +118,8 @@ function LoginContent() {
     if (platform === 'threads') {
       return {
         title: language === 'ko' ? 'Threads 앱 내 브라우저 감지' : 'Threads In-App Browser Detected',
-        icon: (
-          <div className="relative w-full flex justify-end pr-8">
-            <div className="text-6xl animate-bounce">
-              👆
-            </div>
-            <div className="absolute top-0 right-4 w-3 h-3 bg-purple-500 rounded-full animate-ping" />
-          </div>
-        ),
+        showFixedPointer: true,
+        pointerPosition: 'top-right',
         description: language === 'ko' 
           ? (
             <div className="space-y-3">
@@ -191,14 +185,8 @@ function LoginContent() {
     if (platform === 'kakaotalk') {
       return {
         title: language === 'ko' ? '카카오톡 앱 내 브라우저 감지' : 'KakaoTalk In-App Browser Detected',
-        icon: (
-          <div className="relative w-full flex justify-end pr-8 pb-4">
-            <div className="text-6xl animate-bounce">
-              👇
-            </div>
-            <div className="absolute bottom-0 right-4 w-3 h-3 bg-yellow-500 rounded-full animate-ping" />
-          </div>
-        ),
+        showFixedPointer: true,
+        pointerPosition: 'bottom-right',
         description: language === 'ko' 
           ? (
             <div className="space-y-3">
@@ -261,17 +249,7 @@ function LoginContent() {
       };
     }
 
-    return {
-      title: language === 'ko' ? '앱 내 브라우저 감지됨' : 'In-App Browser Detected',
-      icon: (
-        <svg className="w-12 h-12 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-        </svg>
-      ),
-      description: language === 'ko' 
-        ? '로그인이 제대로 작동하지 않을 수 있습니다. Safari나 Chrome에서 열어주세요.' 
-        : 'Login may not work properly. Please open in Safari or Chrome.',
-    };
+    return null;
   };
 
   const warningContent = browserInfo.isInApp ? getInAppWarningContent() : null;
@@ -318,19 +296,41 @@ function LoginContent() {
           </div>
           
           {warningContent && (
-            <div className="mb-6 p-5 bg-gradient-to-br from-orange-500/5 to-pink-500/5 border border-orange-500/20 rounded-2xl backdrop-blur-sm">
-              <div className="flex flex-col gap-3">
-                {warningContent.icon}
-                <div className="w-full">
-                  <h3 className="font-bold text-base mb-3 text-center bg-gradient-to-r from-orange-400 to-pink-400 bg-clip-text text-transparent">
-                    {warningContent.title}
-                  </h3>
-                  <div>
-                    {warningContent.description}
+            <>
+              {warningContent.showFixedPointer && (
+                <div className={`fixed z-50 ${
+                  warningContent.pointerPosition === 'top-right' 
+                    ? 'top-16 right-6' 
+                    : 'bottom-20 right-6'
+                }`}>
+                  <div className="text-6xl animate-bounce">
+                    {warningContent.pointerPosition === 'top-right' ? '👆' : '👇'}
+                  </div>
+                  <div className={`absolute ${
+                    warningContent.pointerPosition === 'top-right'
+                      ? 'top-0 right-0'
+                      : 'bottom-0 right-0'
+                  } w-3 h-3 rounded-full animate-ping ${
+                    warningContent.pointerPosition === 'top-right'
+                      ? 'bg-purple-500'
+                      : 'bg-yellow-500'
+                  }`} />
+                </div>
+              )}
+              
+              <div className="mb-6 p-5 bg-gradient-to-br from-orange-500/5 to-pink-500/5 border border-orange-500/20 rounded-2xl backdrop-blur-sm">
+                <div className="flex flex-col gap-3">
+                  <div className="w-full">
+                    <h3 className="font-bold text-base mb-3 text-center bg-gradient-to-r from-orange-400 to-pink-400 bg-clip-text text-transparent">
+                      {warningContent.title}
+                    </h3>
+                    <div>
+                      {warningContent.description}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            </>
           )}
           
           <div className="space-y-4">
