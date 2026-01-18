@@ -465,8 +465,14 @@ export default function GuidePage() {
                   ? '저장하고 싶은 게시물에서 공유 버튼을 누르고, 설치 받은 ThreadClip을 선택하세요.'
                   : 'Tap the share button on the post you want to save, and select the installed ThreadClip.'}
               </p>
-              <div className="aspect-[9/16] bg-[var(--color-bg-elevated)] rounded-lg flex items-center justify-center">
-                <p className="text-[var(--color-text-muted)] text-sm">{isKorean ? '스크린샷 준비중' : 'Screenshot coming soon'}</p>
+              <div className="bg-[var(--color-bg-elevated)] rounded-lg overflow-hidden">
+                <Image
+                  src="/guide/android-2.jpg"
+                  alt={isKorean ? 'Threads 공유 및 ThreadClip 선택' : 'Share from Threads and select ThreadClip'}
+                  width={1080}
+                  height={2400}
+                  className="w-full h-auto"
+                />
               </div>
             </div>
 
