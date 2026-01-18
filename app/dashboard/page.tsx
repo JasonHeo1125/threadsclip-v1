@@ -3,13 +3,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { showToast, ToastContainer } from '@/components/ui/Toast';
 
-const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'jasonheoai@gmail.com';
-const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'hur159632';
-
 export default function DashboardPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [emailInput, setEmailInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   
   const [users, setUsers] = useState<any[]>([]);
   const [defaultLimit, setDefaultLimit] = useState(1000);
@@ -30,14 +28,30 @@ export default function DashboardPage() {
     }
   }, []);
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (emailInput === ADMIN_EMAIL && passwordInput === ADMIN_PASSWORD) {
-      setIsAuthenticated(true);
-      localStorage.setItem('adminAuth', 'true');
-      fetchData();
-    } else {
-      showToast('이메일 또는 비밀번호가 올바르지 않습니다.', 'error');
+    setIsLoggingIn(true);
+    
+    try {
+      const res = await fetch('/api/admin/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailInput, password: passwordInput }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        setIsAuthenticated(true);
+        localStorage.setItem('adminAuth', 'true');
+        fetchData();
+      } else {
+        showToast('이메일 또는 비밀번호가 올바르지 않습니다.', 'error');
+      }
+    } catch (error) {
+      showToast('로그인 실패. 다시 시도해주세요.', 'error');
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -147,8 +161,8 @@ export default function DashboardPage() {
               />
             </div>
           </div>
-          <button type="submit" className="w-full btn btn-primary py-2 mt-6">
-            로그인
+          <button type="submit" disabled={isLoggingIn} className="w-full btn btn-primary py-2 mt-6">
+            {isLoggingIn ? '로그인 중...' : '로그인'}
           </button>
         </form>
         <ToastContainer />
