@@ -1,50 +1,51 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import { Header } from '@/components/ui/Header';
 import { showToast, ToastContainer } from '@/components/ui/Toast';
 
 const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || '';
 const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || '';
 
 export default function DashboardPage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
-  
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [emailInput, setEmailInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
   
-  // Dashboard Data
   const [users, setUsers] = useState<any[]>([]);
   const [defaultLimit, setDefaultLimit] = useState(1000);
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'users' | 'settings'>('users');
   
-  // Pagination
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  // Edit Modal
   const [editingUser, setEditingUser] = useState<any>(null);
   const [editLimitInput, setEditLimitInput] = useState('');
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
-    }
-  }, [status, router]);
-
-  const handlePasswordSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (passwordInput === ADMIN_PASSWORD) {
+    const adminAuth = localStorage.getItem('adminAuth');
+    if (adminAuth === 'true') {
       setIsAuthenticated(true);
+    }
+  }, []);
+
+  const handleLoginSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (emailInput === ADMIN_EMAIL && passwordInput === ADMIN_PASSWORD) {
+      setIsAuthenticated(true);
+      localStorage.setItem('adminAuth', 'true');
       fetchData();
     } else {
-      showToast('비밀번호가 올바르지 않습니다.', 'error');
+      showToast('이메일 또는 비밀번호가 올바르지 않습니다.', 'error');
     }
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    localStorage.removeItem('adminAuth');
+    setEmailInput('');
+    setPasswordInput('');
   };
 
   const fetchData = useCallback(async () => {
@@ -118,35 +119,36 @@ export default function DashboardPage() {
     }
   };
 
-  if (status === 'loading') return null;
-
-  if (session?.user?.email !== ADMIN_EMAIL) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg)] text-[var(--color-text)]">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-2">접근 권한이 없습니다</h1>
-          <p className="text-[var(--color-text-muted)]">관리자 계정으로 로그인해주세요.</p>
-          <button onClick={() => router.push('/')} className="mt-4 btn btn-primary">메인으로 돌아가기</button>
-        </div>
-      </div>
-    );
-  }
-
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg)]">
-        <form onSubmit={handlePasswordSubmit} className="bg-[var(--color-bg-card)] p-8 rounded-lg border border-[var(--color-border)] shadow-lg max-w-sm w-full">
-          <h2 className="text-xl font-bold mb-4 text-[var(--color-text)] text-center">관리자 인증</h2>
-          <input
-            type="password"
-            value={passwordInput}
-            onChange={(e) => setPasswordInput(e.target.value)}
-            placeholder="비밀번호를 입력하세요"
-            className="w-full px-4 py-2 mb-4 rounded bg-[var(--color-bg-input)] border border-[var(--color-border)] text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-            autoFocus
-          />
-          <button type="submit" className="w-full btn btn-primary py-2">
-            확인
+        <form onSubmit={handleLoginSubmit} className="bg-[var(--color-bg-card)] p-8 rounded-lg border border-[var(--color-border)] shadow-lg max-w-sm w-full">
+          <h2 className="text-xl font-bold mb-6 text-[var(--color-text)] text-center">관리자 로그인</h2>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1 text-[var(--color-text-secondary)]">이메일</label>
+              <input
+                type="email"
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                placeholder="admin@example.com"
+                className="w-full px-4 py-2 rounded bg-[var(--color-bg-input)] border border-[var(--color-border)] text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                autoFocus
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1 text-[var(--color-text-secondary)]">비밀번호</label>
+              <input
+                type="password"
+                value={passwordInput}
+                onChange={(e) => setPasswordInput(e.target.value)}
+                placeholder="비밀번호를 입력하세요"
+                className="w-full px-4 py-2 rounded bg-[var(--color-bg-input)] border border-[var(--color-border)] text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+              />
+            </div>
+          </div>
+          <button type="submit" className="w-full btn btn-primary py-2 mt-6">
+            로그인
           </button>
         </form>
         <ToastContainer />
@@ -156,7 +158,17 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)]">
-      <Header user={session.user} onAddClick={() => {}} />
+      <header className="sticky top-0 z-40 bg-[var(--color-bg)]/80 backdrop-blur-lg border-b border-[var(--color-border)]">
+        <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
+          <h1 className="text-lg font-bold">Admin Dashboard</h1>
+          <button
+            onClick={handleLogout}
+            className="text-sm px-3 py-1 rounded bg-[var(--color-bg-elevated)] hover:bg-[var(--color-border)] transition-colors"
+          >
+            로그아웃
+          </button>
+        </div>
+      </header>
 
       <main className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
