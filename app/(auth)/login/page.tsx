@@ -30,6 +30,10 @@ function getBrowserInfo() {
     return { isInApp: true, platform: 'line', os };
   }
   
+  if (ua.includes('barcelona')) {
+    return { isInApp: true, platform: 'threads', os };
+  }
+  
   if (ua.includes('mobile') && !ua.includes('safari') && ua.includes('webkit')) {
     return { isInApp: true, platform: 'threads', os };
   }
