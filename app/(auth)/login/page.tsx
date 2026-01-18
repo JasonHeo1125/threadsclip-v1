@@ -8,23 +8,33 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 function isInAppBrowser() {
-  if (typeof window === 'undefined') return false;
+  if (typeof window === 'undefined') return { isInApp: false, platform: 'unknown' };
   
   const ua = window.navigator.userAgent.toLowerCase();
   
-  return (
-    (ua.includes('instagram') && !ua.includes('safari')) ||
-    (ua.includes('fban') || ua.includes('fbav')) ||
-    ua.includes('line/') ||
-    ua.includes('kakaotalk') ||
-    (ua.includes('mobile') && !ua.includes('safari') && ua.includes('webkit'))
-  );
+  if (ua.includes('instagram') || ua.includes('fban') || ua.includes('fbav')) {
+    return { isInApp: true, platform: 'instagram' };
+  }
+  
+  if (ua.includes('kakaotalk')) {
+    return { isInApp: true, platform: 'kakaotalk' };
+  }
+  
+  if (ua.includes('line/')) {
+    return { isInApp: true, platform: 'line' };
+  }
+  
+  if (ua.includes('mobile') && !ua.includes('safari') && ua.includes('webkit')) {
+    return { isInApp: true, platform: 'threads' };
+  }
+  
+  return { isInApp: false, platform: 'unknown' };
 }
 
 function LoginContent() {
   const { t, language, setLanguage } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
-  const [showInAppWarning, setShowInAppWarning] = useState(false);
+  const [browserInfo, setBrowserInfo] = useState<{ isInApp: boolean; platform: string }>({ isInApp: false, platform: 'unknown' });
   const searchParams = useSearchParams();
   const router = useRouter();
   const { status } = useSession();
@@ -43,9 +53,8 @@ function LoginContent() {
   }, [status, router]);
 
   useEffect(() => {
-    if (isInAppBrowser()) {
-      setShowInAppWarning(true);
-    }
+    const info = isInAppBrowser();
+    setBrowserInfo(info);
   }, []);
 
   const openInExternalBrowser = async () => {
@@ -103,6 +112,176 @@ function LoginContent() {
     setLanguage(language === 'ko' ? 'en' : 'ko');
   };
 
+  const getInAppWarningContent = () => {
+    const { platform } = browserInfo;
+
+    if (platform === 'threads') {
+      return {
+        title: language === 'ko' ? 'Threads 앱 내 브라우저' : 'Threads In-App Browser',
+        icon: (
+          <div className="relative">
+            <div className="absolute -top-2 -right-2 flex gap-1">
+              <div className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+              <div className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+              <div className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+            </div>
+            <svg className="w-16 h-16 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+            </svg>
+          </div>
+        ),
+        description: language === 'ko' 
+          ? (
+            <div className="space-y-3">
+              <p className="text-sm text-[var(--color-text-secondary)]">
+                로그인이 제대로 작동하지 않을 수 있습니다.
+              </p>
+              <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-3 space-y-2">
+                <div className="flex items-center gap-2 text-purple-400 font-medium text-sm">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>외부 브라우저에서 열기</span>
+                </div>
+                <ol className="text-xs text-[var(--color-text-secondary)] space-y-1.5 pl-7">
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold text-purple-400 flex-shrink-0">1.</span>
+                    <span>화면 <strong className="text-purple-400">오른쪽 위 점 3개(⋮)</strong> 탭</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold text-purple-400 flex-shrink-0">2.</span>
+                    <span><strong className="text-purple-400">"외부 브라우저에서 열기"</strong> 선택</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold text-purple-400 flex-shrink-0">3.</span>
+                    <span>Safari에서 다시 로그인</span>
+                  </li>
+                </ol>
+              </div>
+            </div>
+          ) 
+          : (
+            <div className="space-y-3">
+              <p className="text-sm text-[var(--color-text-secondary)]">
+                Login may not work properly.
+              </p>
+              <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-3 space-y-2">
+                <div className="flex items-center gap-2 text-purple-400 font-medium text-sm">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>Open in External Browser</span>
+                </div>
+                <ol className="text-xs text-[var(--color-text-secondary)] space-y-1.5 pl-7">
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold text-purple-400 flex-shrink-0">1.</span>
+                    <span>Tap <strong className="text-purple-400">three dots (⋮)</strong> at top right</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold text-purple-400 flex-shrink-0">2.</span>
+                    <span>Select <strong className="text-purple-400">"Open in Browser"</strong></span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold text-purple-400 flex-shrink-0">3.</span>
+                    <span>Login again in Safari</span>
+                  </li>
+                </ol>
+              </div>
+            </div>
+          ),
+      };
+    }
+
+    if (platform === 'kakaotalk') {
+      return {
+        title: language === 'ko' ? '카카오톡 앱 내 브라우저' : 'KakaoTalk In-App Browser',
+        icon: (
+          <div className="relative">
+            <div className="absolute -bottom-2 -right-2 flex gap-1">
+              <div className="w-2 h-2 bg-yellow-500 rounded-full animate-ping" />
+            </div>
+            <svg className="w-16 h-16 text-yellow-500" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 3C6.477 3 2 6.463 2 10.691c0 2.68 1.784 5.036 4.478 6.376-.176.649-.638 2.351-.731 2.714-.115.451.165.445.348.324.143-.095 2.282-1.545 3.206-2.171.551.078 1.118.118 1.699.118 5.523 0 10-3.463 10-7.691C22 6.463 17.523 3 12 3z"/>
+            </svg>
+          </div>
+        ),
+        description: language === 'ko' 
+          ? (
+            <div className="space-y-3">
+              <p className="text-sm text-[var(--color-text-secondary)]">
+                로그인이 제대로 작동하지 않을 수 있습니다.
+              </p>
+              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 space-y-2">
+                <div className="flex items-center gap-2 text-yellow-400 font-medium text-sm">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>Safari에서 열기</span>
+                </div>
+                <ol className="text-xs text-[var(--color-text-secondary)] space-y-1.5 pl-7">
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold text-yellow-400 flex-shrink-0">1.</span>
+                    <span>화면 <strong className="text-yellow-400">오른쪽 하단 공유 버튼(↗)</strong> 탭</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold text-yellow-400 flex-shrink-0">2.</span>
+                    <span><strong className="text-yellow-400">"Safari로 열기"</strong> 선택</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold text-yellow-400 flex-shrink-0">3.</span>
+                    <span>Safari에서 다시 로그인</span>
+                  </li>
+                </ol>
+              </div>
+            </div>
+          ) 
+          : (
+            <div className="space-y-3">
+              <p className="text-sm text-[var(--color-text-secondary)]">
+                Login may not work properly.
+              </p>
+              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 space-y-2">
+                <div className="flex items-center gap-2 text-yellow-400 font-medium text-sm">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>Open in Safari</span>
+                </div>
+                <ol className="text-xs text-[var(--color-text-secondary)] space-y-1.5 pl-7">
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold text-yellow-400 flex-shrink-0">1.</span>
+                    <span>Tap <strong className="text-yellow-400">share button (↗)</strong> at bottom right</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold text-yellow-400 flex-shrink-0">2.</span>
+                    <span>Select <strong className="text-yellow-400">"Open in Safari"</strong></span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold text-yellow-400 flex-shrink-0">3.</span>
+                    <span>Login again in Safari</span>
+                  </li>
+                </ol>
+              </div>
+            </div>
+          ),
+      };
+    }
+
+    return {
+      title: language === 'ko' ? '앱 내 브라우저 감지됨' : 'In-App Browser Detected',
+      icon: (
+        <svg className="w-12 h-12 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+      ),
+      description: language === 'ko' 
+        ? '로그인이 제대로 작동하지 않을 수 있습니다. Safari나 Chrome에서 열어주세요.' 
+        : 'Login may not work properly. Please open in Safari or Chrome.',
+    };
+  };
+
+  const warningContent = browserInfo.isInApp ? getInAppWarningContent() : null;
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-primary)] via-[var(--color-secondary)] to-[var(--color-accent)] opacity-10" />
@@ -144,30 +323,19 @@ function LoginContent() {
             </p>
           </div>
           
-          {showInAppWarning && (
-            <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-              <div className="flex items-start gap-3">
-                <svg className="w-6 h-6 text-yellow-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-                <div className="flex-1 text-left">
-                  <h3 className="font-semibold text-yellow-500 mb-2">
-                    {language === 'ko' ? '앱 내 브라우저 감지됨' : 'In-App Browser Detected'}
+          {warningContent && (
+            <div className="mb-6 p-5 bg-gradient-to-br from-orange-500/5 to-pink-500/5 border border-orange-500/20 rounded-2xl backdrop-blur-sm animate-fade-in">
+              <div className="flex flex-col items-center gap-4">
+                <div className="relative">
+                  {warningContent.icon}
+                </div>
+                <div className="w-full text-center">
+                  <h3 className="font-bold text-lg mb-3 bg-gradient-to-r from-orange-400 to-pink-400 bg-clip-text text-transparent">
+                    {warningContent.title}
                   </h3>
-                  <p className="text-sm text-[var(--color-text-secondary)] mb-3">
-                    {language === 'ko' 
-                      ? '로그인이 제대로 작동하지 않을 수 있습니다.' 
-                      : 'Login may not work properly.'}
-                  </p>
-                  <button
-                    onClick={openInExternalBrowser}
-                    className="btn btn-primary w-full text-sm"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                    </svg>
-                    {language === 'ko' ? 'URL 복사하고 방법 보기' : 'Copy URL & See Instructions'}
-                  </button>
+                  <div className="text-left">
+                    {warningContent.description}
+                  </div>
                 </div>
               </div>
             </div>
@@ -251,14 +419,6 @@ function LoginContent() {
                 </>
               )}
             </button>
-            
-            {!showInAppWarning && (
-              <p className="text-xs text-[var(--color-text-muted)] text-center">
-                {language === 'ko' 
-                  ? '⚠️ Google 로그인이 안 되면 외부 브라우저(Safari, Chrome)에서 열어주세요'
-                  : '⚠️ If Google login fails, please open in external browser (Safari, Chrome)'}
-              </p>
-            )}
           </div>
           
           <div className="mt-6 pt-6 border-t border-[var(--color-border)]">
