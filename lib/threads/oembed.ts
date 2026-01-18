@@ -35,7 +35,8 @@ export async function getThreadsOEmbed(url: string): Promise<ThreadsOEmbedRespon
     console.log('Response status:', response.status);
 
     if (!response.ok) {
-      throw new Error(`oEmbed failed: ${response.status}`);
+      console.error(`oEmbed failed: ${response.status}`);
+      return null;
     }
 
     return response.json();
