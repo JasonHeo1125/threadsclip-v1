@@ -384,12 +384,6 @@ export default function GuidePage() {
                   href="/login?redirect=/guide"
                   className="btn btn-primary w-full flex items-center justify-center gap-2"
                 >
-                  <svg className="w-5 h-5" viewBox="0 0 24 24">
-                    <path fill="#fff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                    <path fill="#fff" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                    <path fill="#fff" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                    <path fill="#fff" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                  </svg>
                   {isKorean ? '로그인하기' : 'Login'}
                 </Link>
               </div>
@@ -411,8 +405,8 @@ export default function GuidePage() {
               </div>
               <p className="text-[var(--color-text-secondary)] mb-4">
                 {isKorean
-                  ? '버튼을 눌러 ThreadClip 앱을 홈 화면에 추가하세요. 앱은 메인 페이지에서 시작됩니다.'
-                  : 'Tap the button to add ThreadClip app to your home screen. The app will start from the main page.'}
+                  ? '버튼을 눌러 ThreadClip 앱을 설치해주세요. 앱은 브라우저 기반입니다.'
+                  : 'Tap the button to install ThreadClip app. The app is browser-based.'}
               </p>
 
               <button
@@ -432,7 +426,7 @@ export default function GuidePage() {
                 </svg>
                 {isInstalled
                   ? (isKorean ? '설치 완료' : 'Installed')
-                  : (isKorean ? '홈 화면에 추가' : 'Add to Home Screen')
+                  : (isKorean ? '앱 설치하기' : 'Install App')
                 }
               </button>
 
@@ -445,6 +439,16 @@ export default function GuidePage() {
                   </p>
                 </div>
               )}
+
+              <div className="mt-4 bg-[var(--color-bg-elevated)] rounded-lg overflow-hidden">
+                <Image
+                  src="/guide/android-1.jpg"
+                  alt={isKorean ? '앱 설치 화면' : 'App Installation Screen'}
+                  width={1080}
+                  height={2400}
+                  className="w-full h-auto"
+                />
+              </div>
             </div>
 
             <div className="card p-6">
@@ -458,8 +462,8 @@ export default function GuidePage() {
               </div>
               <p className="text-[var(--color-text-secondary)] mb-4">
                 {isKorean
-                  ? '저장하고 싶은 게시물에서 공유 버튼을 누르세요.'
-                  : 'Tap the share button on the post you want to save.'}
+                  ? '저장하고 싶은 게시물에서 공유 버튼을 누르고, 설치 받은 ThreadClip을 선택하세요.'
+                  : 'Tap the share button on the post you want to save, and select the installed ThreadClip.'}
               </p>
               <div className="aspect-[9/16] bg-[var(--color-bg-elevated)] rounded-lg flex items-center justify-center">
                 <p className="text-[var(--color-text-muted)] text-sm">{isKorean ? '스크린샷 준비중' : 'Screenshot coming soon'}</p>
@@ -472,25 +476,6 @@ export default function GuidePage() {
                   3
                 </div>
                 <h2 className="text-lg font-semibold text-[var(--color-text)]">
-                  {isKorean ? 'ThreadClip 선택' : 'Select ThreadClip'}
-                </h2>
-              </div>
-              <p className="text-[var(--color-text-secondary)] mb-4">
-                {isKorean
-                  ? '공유 목록에서 "ThreadClip"을 선택하세요.'
-                  : 'Select "ThreadClip" from the share list.'}
-              </p>
-              <div className="aspect-[9/16] bg-[var(--color-bg-elevated)] rounded-lg flex items-center justify-center">
-                <p className="text-[var(--color-text-muted)] text-sm">{isKorean ? '스크린샷 준비중' : 'Screenshot coming soon'}</p>
-              </div>
-            </div>
-
-            <div className="card p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center font-bold">
-                  4
-                </div>
-                <h2 className="text-lg font-semibold text-[var(--color-text)]">
                   {isKorean ? '메모 입력 후 저장' : 'Add Note and Save'}
                 </h2>
               </div>
@@ -499,8 +484,14 @@ export default function GuidePage() {
                   ? '메모를 입력하고 저장 버튼을 누르세요.'
                   : 'Enter a note and tap the save button.'}
               </p>
-              <div className="aspect-[9/16] bg-[var(--color-bg-elevated)] rounded-lg flex items-center justify-center">
-                <p className="text-[var(--color-text-muted)] text-sm">{isKorean ? '스크린샷 준비중' : 'Screenshot coming soon'}</p>
+              <div className="bg-[var(--color-bg-elevated)] rounded-lg overflow-hidden">
+                <Image
+                  src="/guide/iphone-5.jpg"
+                  alt={isKorean ? '메모 입력 및 저장' : 'Add Note and Save'}
+                  width={1206}
+                  height={2107}
+                  className="w-full h-auto"
+                />
               </div>
             </div>
 
