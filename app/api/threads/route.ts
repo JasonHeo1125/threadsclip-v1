@@ -34,12 +34,20 @@ export async function POST(request: Request) {
 
     const cleanedUrl = cleanThreadsUrl(url);
 
-    const count = await prisma.savedThread.count({
-      where: { userId: session.user.id }
-    });
+    const [count, user] = await Promise.all([
+      prisma.savedThread.count({
+        where: { userId: session.user.id }
+      }),
+      prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { storageLimit: true }
+      })
+    ]);
 
-    if (count >= STORAGE_LIMITS.FREE_TIER) {
-      return NextResponse.json({ error: `Storage limit reached (${STORAGE_LIMITS.FREE_TIER} threads)` }, { status: 429 });
+    const limit = user?.storageLimit || 1000;
+
+    if (count >= limit) {
+      return NextResponse.json({ error: `Storage limit reached (${limit} threads)` }, { status: 429 });
     }
 
     const existing = await prisma.savedThread.findUnique({

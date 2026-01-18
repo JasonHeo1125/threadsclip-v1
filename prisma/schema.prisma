@@ -51,6 +51,7 @@ model User {
   subscriptionStatus String   @default("active") @map("subscription_status")  // active, cancelled, expired
   subscriptionEndsAt DateTime? @map("subscription_ends_at")  // Pro 구독 종료일
   storageLimit       Int      @default(1000) @map("storage_limit")  // 저장 가능한 게시물 수
+  role               String   @default("user") // user, admin
 
   accounts     Account[]
   sessions     Session[]
@@ -58,6 +59,15 @@ model User {
   tags         Tag[]
 
   @@map("users")
+}
+
+model SystemSettings {
+  key         String   @id
+  value       String
+  description String?
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("system_settings")
 }
 
 model VerificationToken {
