@@ -7,34 +7,41 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 
-function isInAppBrowser() {
-  if (typeof window === 'undefined') return { isInApp: false, platform: 'unknown' };
+function getBrowserInfo() {
+  if (typeof window === 'undefined') return { isInApp: false, platform: 'unknown', os: 'unknown' };
   
   const ua = window.navigator.userAgent.toLowerCase();
   
+  // OS 감지
+  const isIOS = /iphone|ipad|ipod/.test(ua);
+  const isAndroid = /android/.test(ua);
+  const os = isIOS ? 'ios' : isAndroid ? 'android' : 'unknown';
+  
+  // 앱 감지
   if (ua.includes('instagram') || ua.includes('fban') || ua.includes('fbav')) {
-    return { isInApp: true, platform: 'instagram' };
+    return { isInApp: true, platform: 'instagram', os };
   }
   
   if (ua.includes('kakaotalk')) {
-    return { isInApp: true, platform: 'kakaotalk' };
+    return { isInApp: true, platform: 'kakaotalk', os };
   }
   
   if (ua.includes('line/')) {
-    return { isInApp: true, platform: 'line' };
+    return { isInApp: true, platform: 'line', os };
   }
   
   if (ua.includes('mobile') && !ua.includes('safari') && ua.includes('webkit')) {
-    return { isInApp: true, platform: 'threads' };
+    return { isInApp: true, platform: 'threads', os };
   }
   
-  return { isInApp: false, platform: 'unknown' };
+  return { isInApp: false, platform: 'unknown', os };
 }
 
 function LoginContent() {
   const { t, language, setLanguage } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
-  const [browserInfo, setBrowserInfo] = useState<{ isInApp: boolean; platform: string }>({ isInApp: false, platform: 'unknown' });
+  const [browserInfo, setBrowserInfo] = useState<{ isInApp: boolean; platform: string; os: string }>({ isInApp: false, platform: 'unknown', os: 'unknown' });
+  const [showDebug, setShowDebug] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
   const { status } = useSession();
@@ -53,7 +60,7 @@ function LoginContent() {
   }, [status, router]);
 
   useEffect(() => {
-    const info = isInAppBrowser();
+    const info = getBrowserInfo();
     setBrowserInfo(info);
   }, []);
 
@@ -113,11 +120,16 @@ function LoginContent() {
   };
 
   const getInAppWarningContent = () => {
-    const { platform } = browserInfo;
+    const { platform, os } = browserInfo;
+    const browserName = os === 'ios' ? 'Safari' : 'Chrome';
+    const browserNameKo = os === 'ios' ? 'Safari' : 'Chrome';
 
-    if (platform === 'threads') {
+    if (platform === 'threads' || platform === 'instagram') {
+      const appName = platform === 'threads' ? 'Threads' : 'Instagram';
+      const appNameKo = platform === 'threads' ? 'Threads' : '인스타그램';
+      
       return {
-        title: language === 'ko' ? 'Threads 앱 내 브라우저 감지' : 'Threads In-App Browser Detected',
+        title: language === 'ko' ? `${appNameKo} 앱 내 브라우저 감지` : `${appName} In-App Browser Detected`,
         showFixedPointer: true,
         pointerPosition: 'top-right',
         description: language === 'ko' 
@@ -131,12 +143,12 @@ function LoginContent() {
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <span>Safari에서 접속하기</span>
+                  <span>{browserNameKo}에서 접속하기</span>
                 </div>
                 <ol className="text-sm text-[var(--color-text-secondary)] space-y-2 pl-1">
                   <li className="flex items-start gap-2">
                     <span className="font-bold text-purple-400 flex-shrink-0">1.</span>
-                    <span>화면 <strong className="text-purple-400">오른쪽 위 점 3개(⋮)</strong> 탭</span>
+                    <span>화면 <strong className="text-purple-400">오른쪽 위 가로 점 3개(⋯)</strong> 탭</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="font-bold text-purple-400 flex-shrink-0">2.</span>
@@ -144,7 +156,7 @@ function LoginContent() {
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="font-bold text-purple-400 flex-shrink-0">3.</span>
-                    <span>Safari에서 다시 로그인</span>
+                    <span>{browserNameKo}에서 다시 로그인</span>
                   </li>
                 </ol>
               </div>
@@ -160,12 +172,12 @@ function LoginContent() {
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <span>Access via Safari</span>
+                  <span>Access via {browserName}</span>
                 </div>
                 <ol className="text-sm text-[var(--color-text-secondary)] space-y-2 pl-1">
                   <li className="flex items-start gap-2">
                     <span className="font-bold text-purple-400 flex-shrink-0">1.</span>
-                    <span>Tap <strong className="text-purple-400">three dots (⋮)</strong> at top right</span>
+                    <span>Tap <strong className="text-purple-400">three horizontal dots (⋯)</strong> at top right</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="font-bold text-purple-400 flex-shrink-0">2.</span>
@@ -173,7 +185,7 @@ function LoginContent() {
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="font-bold text-purple-400 flex-shrink-0">3.</span>
-                    <span>Login again in Safari</span>
+                    <span>Login again in {browserName}</span>
                   </li>
                 </ol>
               </div>
@@ -183,9 +195,12 @@ function LoginContent() {
     }
 
     if (platform === 'kakaotalk') {
+      // 카카오톡은 iOS/Android에서 UI가 다름
+      const isIOS = os === 'ios';
+      
       return {
         title: language === 'ko' ? '카카오톡 앱 내 브라우저 감지' : 'KakaoTalk In-App Browser Detected',
-        showFixedPointer: true,
+        showFixedPointer: isIOS, // Android는 UI가 다양해서 포인터 비활성화
         pointerPosition: 'bottom-right',
         description: language === 'ko' 
           ? (
@@ -193,27 +208,44 @@ function LoginContent() {
               <p className="text-sm text-[var(--color-text-secondary)] text-center">
                 로그인이 제대로 작동하지 않을 수 있습니다.
               </p>
-              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 space-y-2">
-                <div className="flex items-center gap-2 text-yellow-400 font-semibold text-sm">
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 space-y-2">
+                <div className="flex items-center gap-2 text-amber-300 font-semibold text-sm">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <span>Safari에서 접속하기</span>
+                  <span>{browserNameKo}에서 접속하기</span>
                 </div>
-                <ol className="text-sm text-[var(--color-text-secondary)] space-y-2 pl-1">
-                  <li className="flex items-start gap-2">
-                    <span className="font-bold text-yellow-400 flex-shrink-0">1.</span>
-                    <span>화면 <strong className="text-yellow-400">오른쪽 하단 공유 버튼(↗)</strong> 탭</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="font-bold text-yellow-400 flex-shrink-0">2.</span>
-                    <span><strong className="text-yellow-400">"Safari로 열기"</strong> 선택</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="font-bold text-yellow-400 flex-shrink-0">3.</span>
-                    <span>Safari에서 다시 로그인</span>
-                  </li>
-                </ol>
+                {isIOS ? (
+                  <ol className="text-sm text-[var(--color-text-secondary)] space-y-2 pl-1">
+                    <li className="flex items-start gap-2">
+                      <span className="font-bold text-amber-300 flex-shrink-0">1.</span>
+                      <span>화면 <strong className="text-amber-300">오른쪽 하단 공유 버튼(↑)</strong> 탭</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="font-bold text-amber-300 flex-shrink-0">2.</span>
+                      <span><strong className="text-amber-300">"Safari로 열기"</strong> 선택</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="font-bold text-amber-300 flex-shrink-0">3.</span>
+                      <span>Safari에서 다시 로그인</span>
+                    </li>
+                  </ol>
+                ) : (
+                  <ol className="text-sm text-[var(--color-text-secondary)] space-y-2 pl-1">
+                    <li className="flex items-start gap-2">
+                      <span className="font-bold text-amber-300 flex-shrink-0">1.</span>
+                      <span>화면 <strong className="text-amber-300">오른쪽 위 점 3개(⋮)</strong> 탭</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="font-bold text-amber-300 flex-shrink-0">2.</span>
+                      <span><strong className="text-amber-300">"다른 브라우저로 열기"</strong> 선택</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="font-bold text-amber-300 flex-shrink-0">3.</span>
+                      <span>Chrome에서 다시 로그인</span>
+                    </li>
+                  </ol>
+                )}
               </div>
             </div>
           ) 
@@ -222,27 +254,44 @@ function LoginContent() {
               <p className="text-sm text-[var(--color-text-secondary)] text-center">
                 Login may not work properly.
               </p>
-              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 space-y-2">
-                <div className="flex items-center gap-2 text-yellow-400 font-semibold text-sm">
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 space-y-2">
+                <div className="flex items-center gap-2 text-amber-300 font-semibold text-sm">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <span>Access via Safari</span>
+                  <span>Access via {browserName}</span>
                 </div>
-                <ol className="text-sm text-[var(--color-text-secondary)] space-y-2 pl-1">
-                  <li className="flex items-start gap-2">
-                    <span className="font-bold text-yellow-400 flex-shrink-0">1.</span>
-                    <span>Tap <strong className="text-yellow-400">share button (↗)</strong> at bottom right</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="font-bold text-yellow-400 flex-shrink-0">2.</span>
-                    <span>Select <strong className="text-yellow-400">"Open in Safari"</strong></span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="font-bold text-yellow-400 flex-shrink-0">3.</span>
-                    <span>Login again in Safari</span>
-                  </li>
-                </ol>
+                {isIOS ? (
+                  <ol className="text-sm text-[var(--color-text-secondary)] space-y-2 pl-1">
+                    <li className="flex items-start gap-2">
+                      <span className="font-bold text-amber-300 flex-shrink-0">1.</span>
+                      <span>Tap <strong className="text-amber-300">share button (↑)</strong> at bottom right</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="font-bold text-amber-300 flex-shrink-0">2.</span>
+                      <span>Select <strong className="text-amber-300">"Open in Safari"</strong></span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="font-bold text-amber-300 flex-shrink-0">3.</span>
+                      <span>Login again in Safari</span>
+                    </li>
+                  </ol>
+                ) : (
+                  <ol className="text-sm text-[var(--color-text-secondary)] space-y-2 pl-1">
+                    <li className="flex items-start gap-2">
+                      <span className="font-bold text-amber-300 flex-shrink-0">1.</span>
+                      <span>Tap <strong className="text-amber-300">three dots (⋮)</strong> at top right</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="font-bold text-amber-300 flex-shrink-0">2.</span>
+                      <span>Select <strong className="text-amber-300">"Open in other browser"</strong></span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="font-bold text-amber-300 flex-shrink-0">3.</span>
+                      <span>Login again in Chrome</span>
+                    </li>
+                  </ol>
+                )}
               </div>
             </div>
           ),
@@ -267,6 +316,43 @@ function LoginContent() {
       >
         {language === 'ko' ? 'EN' : '한국어'}
       </button>
+      
+      <button
+        onClick={() => setShowDebug(!showDebug)}
+        className="absolute top-6 right-6 btn btn-ghost text-xs z-[60]"
+      >
+        🔍 DEBUG
+      </button>
+      
+      {showDebug && (
+        <div className="absolute top-20 right-6 max-w-sm p-4 bg-black/90 text-white text-xs rounded-lg z-[60] space-y-2 break-all">
+          <div>
+            <strong>User-Agent:</strong>
+            <div className="mt-1 text-yellow-300">{typeof window !== 'undefined' ? window.navigator.userAgent : 'N/A'}</div>
+          </div>
+          <div>
+            <strong>Detected:</strong>
+            <div className="mt-1">
+              Platform: <span className="text-green-300">{browserInfo.platform}</span>
+              <br />
+              OS: <span className="text-green-300">{browserInfo.os}</span>
+              <br />
+              In-App: <span className="text-green-300">{browserInfo.isInApp ? 'YES' : 'NO'}</span>
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              if (typeof window !== 'undefined') {
+                navigator.clipboard.writeText(window.navigator.userAgent);
+                alert('User-Agent copied to clipboard!');
+              }
+            }}
+            className="btn btn-sm w-full mt-2"
+          >
+            📋 Copy UA
+          </button>
+        </div>
+      )}
       
       <main className="relative z-10 w-full max-w-md px-6 animate-fade-in">
         <div className="card p-8 text-center">
@@ -313,7 +399,7 @@ function LoginContent() {
                   } w-3 h-3 rounded-full animate-ping ${
                     warningContent.pointerPosition === 'top-right'
                       ? 'bg-purple-500'
-                      : 'bg-yellow-500'
+                      : 'bg-amber-500'
                   }`} />
                 </div>
               )}
