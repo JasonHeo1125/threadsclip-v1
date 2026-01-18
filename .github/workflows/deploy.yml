@@ -81,12 +81,18 @@ jobs:
             EOF
             
             echo "📋 .env.production 파일 생성됨"
+            echo "파일 내용 확인 (민감 정보 제외):"
+            grep -v "SECRET\|PASSWORD\|KEY" .env.production || echo "환경변수 설정됨"
             
             docker compose -f docker-compose.prod.yml pull
             docker compose -f docker-compose.prod.yml down
             docker compose -f docker-compose.prod.yml up -d
             
             echo "🎉 배포 완료!"
-            echo "📝 컨테이너 로그 (최근 50줄):"
+            echo "📝 컨테이너 로그 (최근 100줄):"
             sleep 5
-            docker logs threadsclip --tail 50
+            docker logs threadsclip --tail 100
+            
+            echo ""
+            echo "🔍 환경변수 확인 (민감 정보 제외):"
+            docker exec threadsclip env | grep -E "NODE_ENV|NEXTAUTH_URL" || echo "환경변수 확인 실패"
