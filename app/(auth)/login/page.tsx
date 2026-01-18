@@ -45,7 +45,6 @@ function LoginContent() {
   const { t, language, setLanguage } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [browserInfo, setBrowserInfo] = useState<{ isInApp: boolean; platform: string; os: string }>({ isInApp: false, platform: 'unknown', os: 'unknown' });
-  const [showDebug, setShowDebug] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
   const { status } = useSession();
@@ -320,43 +319,6 @@ function LoginContent() {
       >
         {language === 'ko' ? 'EN' : '한국어'}
       </button>
-      
-      <button
-        onClick={() => setShowDebug(!showDebug)}
-        className="absolute top-20 right-6 btn btn-ghost text-xs z-[60] bg-red-500/20 border border-red-500"
-      >
-        🔍 DEBUG
-      </button>
-      
-      {showDebug && (
-        <div className="absolute top-20 right-6 max-w-sm p-4 bg-black/90 text-white text-xs rounded-lg z-[60] space-y-2 break-all">
-          <div>
-            <strong>User-Agent:</strong>
-            <div className="mt-1 text-yellow-300">{typeof window !== 'undefined' ? window.navigator.userAgent : 'N/A'}</div>
-          </div>
-          <div>
-            <strong>Detected:</strong>
-            <div className="mt-1">
-              Platform: <span className="text-green-300">{browserInfo.platform}</span>
-              <br />
-              OS: <span className="text-green-300">{browserInfo.os}</span>
-              <br />
-              In-App: <span className="text-green-300">{browserInfo.isInApp ? 'YES' : 'NO'}</span>
-            </div>
-          </div>
-          <button
-            onClick={() => {
-              if (typeof window !== 'undefined') {
-                navigator.clipboard.writeText(window.navigator.userAgent);
-                alert('User-Agent copied to clipboard!');
-              }
-            }}
-            className="btn btn-sm w-full mt-2"
-          >
-            📋 Copy UA
-          </button>
-        </div>
-      )}
       
       <main className="relative z-10 w-full max-w-md px-6 animate-fade-in">
         <div className="card p-8 text-center">
