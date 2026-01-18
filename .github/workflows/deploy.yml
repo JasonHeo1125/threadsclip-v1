@@ -57,3 +57,17 @@ jobs:
         run: |
           echo "✅ Docker image pushed successfully!"
           echo "Image: ${{ steps.meta.outputs.tags }}"
+
+      - name: Deploy to VM
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /home/opc/threadsclip
+            git pull origin main
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d
+            echo "🎉 배포 완료!"
+            docker logs threadsclip --tail 10
