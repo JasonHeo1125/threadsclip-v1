@@ -2,12 +2,17 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { signOut } from 'next-auth/react';
 import { useTranslation } from '@/lib/i18n';
-import { createClient } from '@/lib/supabase/client';
-import type { Profile } from '@/types/database';
+
+interface HeaderUser {
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+}
 
 interface HeaderProps {
-  user: Profile | null;
+  user?: HeaderUser | null;
   onAddClick: () => void;
 }
 
@@ -15,10 +20,9 @@ export function Header({ user, onAddClick }: HeaderProps) {
   const { t, language, setLanguage } = useTranslation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const router = useRouter();
-  const supabase = createClient();
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await signOut({ redirect: false });
     router.push('/login');
     router.refresh();
   };
@@ -64,15 +68,15 @@ export function Header({ user, onAddClick }: HeaderProps) {
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="w-9 h-9 rounded-full overflow-hidden border-2 border-[var(--color-border)] hover:border-[var(--color-primary)] transition-colors"
             >
-              {user?.avatar_url ? (
+              {user?.image ? (
                 <img
-                  src={user.avatar_url}
-                  alt={user.display_name || ''}
+                  src={user.image}
+                  alt={user.name || ''}
                   className="w-full h-full object-cover"
                 />
               ) : (
                 <div className="w-full h-full gradient-bg flex items-center justify-center text-white font-semibold text-sm">
-                  {user?.display_name?.[0] || user?.email?.[0] || '?'}
+                  {user?.name?.[0] || user?.email?.[0] || '?'}
                 </div>
               )}
             </button>
@@ -85,7 +89,7 @@ export function Header({ user, onAddClick }: HeaderProps) {
                 />
                 <div className="absolute right-0 top-full mt-2 w-48 card p-2 z-20 animate-fade-in">
                   <div className="px-3 py-2 border-b border-[var(--color-border)] mb-2">
-                    <p className="font-medium text-sm truncate">{user?.display_name}</p>
+                    <p className="font-medium text-sm truncate">{user?.name}</p>
                     <p className="text-xs text-[var(--color-text-muted)] truncate">{user?.email}</p>
                   </div>
                   <a

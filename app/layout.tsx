@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { I18nProvider } from "@/lib/i18n";
+import { AuthProvider } from "@/components/providers/SessionProvider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -67,9 +68,11 @@ export default function RootLayout({
 
       </head>
       <body className={`${inter.variable} antialiased`}>
-        <I18nProvider>
-          {children}
-        </I18nProvider>
+        <AuthProvider>
+          <I18nProvider>
+            {children}
+          </I18nProvider>
+        </AuthProvider>
         <Script id="register-sw" strategy="afterInteractive">
           {`
             if ('serviceWorker' in navigator) {

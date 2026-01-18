@@ -2,16 +2,17 @@
 
 import { Suspense } from 'react';
 import { useTranslation } from '@/lib/i18n';
-import { createClient } from '@/lib/supabase/client';
+import { signIn, useSession } from 'next-auth/react';
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 function LoginContent() {
   const { t, language, setLanguage } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const searchParams = useSearchParams();
-  const supabase = createClient();
+  const router = useRouter();
+  const { status } = useSession();
 
   useEffect(() => {
     const redirect = searchParams.get('redirect');
@@ -20,16 +21,16 @@ function LoginContent() {
     }
   }, [searchParams]);
 
+  useEffect(() => {
+    if (status === 'authenticated') {
+      router.push('/');
+    }
+  }, [status, router]);
+
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-      if (error) throw error;
+      await signIn('google', { callbackUrl: '/' });
     } catch (error) {
       console.error('Login error:', error);
       setIsLoading(false);
@@ -168,7 +169,7 @@ function LoginContent() {
             </div>
             <div className="flex items-center gap-2 text-sm">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
               </svg>
               {language === 'ko' ? '태그' : 'Tags'}
             </div>

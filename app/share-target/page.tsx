@@ -2,8 +2,8 @@
 
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
+import { useSession, signIn } from 'next-auth/react';
 import { useTranslation } from '@/lib/i18n';
-import { createClient } from '@/lib/supabase/client';
 import { showToast, ToastContainer } from '@/components/ui/Toast';
 import type { Tag } from '@/types/database';
 
@@ -11,6 +11,7 @@ function ShareTargetContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { t } = useTranslation();
+  const { data: session, status: authStatus } = useSession();
   const [threadsUrl, setThreadsUrl] = useState<string | null>(null);
   const [memo, setMemo] = useState('');
   const [status, setStatus] = useState<'loading' | 'login' | 'input' | 'saving' | 'success' | 'error'>('loading');
@@ -19,7 +20,6 @@ function ShareTargetContent() {
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [newTagName, setNewTagName] = useState('');
   const [isAddingTag, setIsAddingTag] = useState(false);
-  const supabase = createClient();
 
   const LAST_TAGS_KEY = 'threadclip_last_tags';
 
@@ -68,10 +68,10 @@ function ShareTargetContent() {
   };
 
   useEffect(() => {
+    if (authStatus === 'loading') return;
+
     async function checkAuth() {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
+      if (authStatus === 'unauthenticated') {
         setStatus('login');
         return;
       }
@@ -108,12 +108,12 @@ function ShareTargetContent() {
     }
 
     checkAuth();
-  }, [searchParams, router, t, supabase.auth]);
+  }, [searchParams, router, t, authStatus]);
 
   async function handleLogin() {
     const currentUrl = window.location.href;
     localStorage.setItem('redirectAfterLogin', currentUrl);
-    router.push('/login');
+    await signIn('google', { callbackUrl: currentUrl });
   }
 
   async function handleSave() {

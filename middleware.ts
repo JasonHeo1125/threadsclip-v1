@@ -1,9 +1,24 @@
-import { type NextRequest } from 'next/server';
-import { updateSession } from '@/lib/supabase/middleware';
+import { auth } from '@/lib/auth';
+import { NextResponse } from 'next/server';
 
-export async function middleware(request: NextRequest) {
-  return await updateSession(request);
-}
+const publicRoutes = ['/login', '/auth/callback', '/guide', '/privacy', '/terms', '/data-deletion', '/api/auth'];
+
+export default auth((req) => {
+  const { nextUrl } = req;
+  const isLoggedIn = !!req.auth;
+  
+  const isPublicRoute = publicRoutes.some(route => 
+    nextUrl.pathname === route || nextUrl.pathname.startsWith(route + '/')
+  );
+  
+  const isShareTarget = nextUrl.pathname === '/share-target';
+  
+  if (!isLoggedIn && !isPublicRoute && !isShareTarget) {
+    return NextResponse.redirect(new URL('/login', nextUrl));
+  }
+
+  return NextResponse.next();
+});
 
 export const config = {
   matcher: [

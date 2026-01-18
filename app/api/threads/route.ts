@@ -1,7 +1,13 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/db';
 import { getThreadsOEmbed, extractTextFromHtml, isValidThreadsUrl, extractUsernameFromUrl } from '@/lib/threads/oembed';
 import { STORAGE_LIMITS } from '@/lib/constants';
+import { SavedThread, Tag, ThreadTag } from '@prisma/client';
+
+type ThreadWithTags = SavedThread & {
+  tags: (ThreadTag & { tag: Tag })[];
+};
 
 function cleanThreadsUrl(url: string): string {
   try {
@@ -15,10 +21,8 @@ function cleanThreadsUrl(url: string): string {
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient();
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    const session = await auth();
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -30,21 +34,22 @@ export async function POST(request: Request) {
 
     const cleanedUrl = cleanThreadsUrl(url);
 
-    const { count } = await supabase
-      .from('saved_threads')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id);
+    const count = await prisma.savedThread.count({
+      where: { userId: session.user.id }
+    });
 
-    if (count && count >= STORAGE_LIMITS.FREE_TIER) {
+    if (count >= STORAGE_LIMITS.FREE_TIER) {
       return NextResponse.json({ error: `Storage limit reached (${STORAGE_LIMITS.FREE_TIER} threads)` }, { status: 429 });
     }
 
-    const { data: existing } = await supabase
-      .from('saved_threads')
-      .select('id')
-      .eq('user_id', user.id)
-      .eq('original_url', cleanedUrl)
-      .single() as { data: { id: string } | null };
+    const existing = await prisma.savedThread.findUnique({
+      where: {
+        userId_originalUrl: {
+          userId: session.user.id,
+          originalUrl: cleanedUrl
+        }
+      }
+    });
 
     if (existing) {
       return NextResponse.json({ error: 'Thread already saved', id: existing.id }, { status: 409 });
@@ -53,36 +58,22 @@ export async function POST(request: Request) {
     const oembedData = await getThreadsOEmbed(cleanedUrl);
     const usernameFromUrl = extractUsernameFromUrl(cleanedUrl);
 
-    const threadData = {
-      user_id: user.id,
-      original_url: cleanedUrl,
-      content_snippet: oembedData?.html ? extractTextFromHtml(oembedData.html) : null,
-      image_url: oembedData?.thumbnail_url || null,
-      author_name: oembedData?.author_name || (usernameFromUrl ? `@${usernameFromUrl}` : null),
-      author_username: oembedData?.author_url?.split('/').pop()?.replace('@', '') || usernameFromUrl || null,
-      memo: memo || null,
-    };
-
-    const { data: savedThread, error } = await supabase
-      .from('saved_threads')
-      .insert(threadData as never)
-      .select()
-      .single() as { data: { id: string } | null; error: unknown };
-
-    if (error) {
-      throw error;
-    }
-
-    if (tagIds.length > 0 && savedThread) {
-      const threadTagsData = tagIds.map((tagId: string) => ({
-        thread_id: savedThread.id,
-        tag_id: tagId,
-      }));
-
-      await supabase
-        .from('thread_tags')
-        .insert(threadTagsData as never);
-    }
+    const savedThread = await prisma.savedThread.create({
+      data: {
+        userId: session.user.id,
+        originalUrl: cleanedUrl,
+        contentSnippet: oembedData?.html ? extractTextFromHtml(oembedData.html) : null,
+        imageUrl: oembedData?.thumbnail_url || null,
+        authorName: oembedData?.author_name || (usernameFromUrl ? `@${usernameFromUrl}` : null),
+        authorUsername: oembedData?.author_url?.split('/').pop()?.replace('@', '') || usernameFromUrl || null,
+        memo: memo || null,
+        tags: tagIds.length > 0 ? {
+          create: tagIds.map((tagId: string) => ({
+            tagId
+          }))
+        } : undefined
+      }
+    });
 
     return NextResponse.json({ success: true, data: savedThread });
   } catch (error) {
@@ -96,10 +87,8 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   try {
-    const supabase = await createClient();
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    const session = await auth();
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -110,63 +99,63 @@ export async function GET(request: Request) {
     const tagId = searchParams.get('tagId') || '';
     const sortOrder = searchParams.get('sortOrder') || 'newest';
 
-    interface ThreadWithJoins {
-      id: string;
-      user_id: string;
-      original_url: string;
-      content_snippet: string | null;
-      image_url: string | null;
-      author_name: string | null;
-      author_username: string | null;
-      memo: string | null;
-      created_at: string;
-      updated_at: string;
-      thread_tags?: Array<{ tag_id: string; tags: unknown }>;
-    }
-
-    let query = supabase
-      .from('saved_threads')
-      .select(`
-        *,
-        thread_tags (
-          tag_id,
-          tags (*)
-        )
-      `, { count: 'exact' })
-      .eq('user_id', user.id);
-
-    if (search) {
-      query = query.or(`memo.ilike.%${search}%,author_name.ilike.%${search}%,author_username.ilike.%${search}%`);
-    }
-
-    query = query.order('created_at', { ascending: sortOrder === 'oldest' });
-    query = query.range(offset, offset + limit - 1);
-
-    const { data, error, count } = await query as { 
-      data: ThreadWithJoins[] | null; 
-      error: unknown;
-      count: number | null;
+    const where = {
+      userId: session.user.id,
+      ...(search ? {
+        OR: [
+          { memo: { contains: search, mode: 'insensitive' as const } },
+          { authorName: { contains: search, mode: 'insensitive' as const } },
+          { authorUsername: { contains: search, mode: 'insensitive' as const } },
+        ]
+      } : {}),
+      ...(tagId ? {
+        tags: {
+          some: { tagId }
+        }
+      } : {})
     };
 
-    if (error) {
-      throw error;
-    }
+    const [threads, total] = await Promise.all([
+      prisma.savedThread.findMany({
+        where,
+        include: {
+          tags: {
+            include: {
+              tag: true
+            }
+          }
+        },
+        orderBy: { createdAt: sortOrder === 'oldest' ? 'asc' : 'desc' },
+        skip: offset,
+        take: limit,
+      }),
+      prisma.savedThread.count({ where })
+    ]);
 
-    let threadsWithTags = (data || []).map(thread => ({
-      ...thread,
-      tags: thread.thread_tags?.map((tt) => tt.tags) || [],
+    const threadsWithTags = (threads as ThreadWithTags[]).map((thread) => ({
+      id: thread.id,
+      user_id: thread.userId,
+      original_url: thread.originalUrl,
+      content_snippet: thread.contentSnippet,
+      image_url: thread.imageUrl,
+      author_name: thread.authorName,
+      author_username: thread.authorUsername,
+      memo: thread.memo,
+      created_at: thread.createdAt.toISOString(),
+      updated_at: thread.updatedAt.toISOString(),
+      tags: thread.tags.map((tt: ThreadTag & { tag: Tag }) => ({
+        id: tt.tag.id,
+        user_id: tt.tag.userId,
+        name: tt.tag.name,
+        color: tt.tag.color,
+        created_at: tt.tag.createdAt.toISOString()
+      }))
     }));
-
-    if (tagId) {
-      threadsWithTags = threadsWithTags.filter(thread => 
-        thread.tags?.some((tag: unknown) => (tag as { id?: string })?.id === tagId)
-      );
-    }
 
     return NextResponse.json({ 
       data: threadsWithTags,
-      total: count || 0,
-      hasMore: (offset + limit) < (count || 0)
+      total,
+      hasMore: (offset + limit) < total
     });
   } catch (error) {
     console.error('Get threads error:', error);
@@ -179,10 +168,8 @@ export async function GET(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const supabase = await createClient();
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    const session = await auth();
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -193,15 +180,12 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Thread ID required' }, { status: 400 });
     }
 
-    const { error } = await supabase
-      .from('saved_threads')
-      .delete()
-      .eq('id', id)
-      .eq('user_id', user.id);
-
-    if (error) {
-      throw error;
-    }
+    await prisma.savedThread.delete({
+      where: {
+        id,
+        userId: session.user.id
+      }
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

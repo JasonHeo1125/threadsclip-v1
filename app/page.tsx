@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { useTranslation } from '@/lib/i18n';
 import { Header } from '@/components/ui/Header';
 import { SearchBar } from '@/components/ui/SearchBar';
@@ -10,9 +11,8 @@ import { SaveThreadModal } from '@/components/thread/SaveThreadModal';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ThreadListSkeleton } from '@/components/ui/Loading';
 import { ToastContainer, showToast } from '@/components/ui/Toast';
-import { createClient } from '@/lib/supabase/client';
 import { STORAGE_LIMITS } from '@/lib/constants';
-import type { SavedThread, Tag, Profile } from '@/types/database';
+import type { SavedThread, Tag } from '@/types/database';
 
 type ThreadWithTags = SavedThread & { tags: Tag[] };
 type SortOrder = 'newest' | 'oldest';
@@ -22,10 +22,10 @@ const ITEMS_PER_PAGE = 10;
 export default function HomePage() {
   const { t } = useTranslation();
   const router = useRouter();
+  const { data: session } = useSession();
   const [threads, setThreads] = useState<ThreadWithTags[]>([]);
   const [total, setTotal] = useState(0);
   const [hasMore, setHasMore] = useState(false);
-  const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -38,7 +38,6 @@ export default function HomePage() {
   const [isLimitPopupOpen, setIsLimitPopupOpen] = useState(false);
   const offsetRef = useRef(0);
   const loadMoreRef = useRef<HTMLDivElement>(null);
-  const supabase = createClient();
 
   useEffect(() => {
     const redirectPath = localStorage.getItem('loginRedirect');
@@ -108,22 +107,9 @@ export default function HomePage() {
     }
   }, []);
 
-  const fetchProfile = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const { data } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-      setProfile(data);
-    }
-  }, [supabase]);
-
   useEffect(() => {
-    fetchProfile();
     fetchTags();
-  }, [fetchProfile, fetchTags]);
+  }, [fetchTags]);
 
   useEffect(() => {
     fetchThreads(true);
@@ -229,7 +215,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)]">
-      <Header user={profile} onAddClick={() => setIsModalOpen(true)} />
+      <Header user={session?.user} onAddClick={() => setIsModalOpen(true)} />
 
       <main className="max-w-3xl mx-auto px-4 py-6">
         <div className="mb-6">

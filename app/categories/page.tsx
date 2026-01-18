@@ -2,15 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { useTranslation } from '@/lib/i18n';
-import { createClient } from '@/lib/supabase/client';
 import { showToast, ToastContainer } from '@/components/ui/Toast';
 import type { Tag } from '@/types/database';
 
 export default function CategoriesPage() {
   const { t, language } = useTranslation();
   const router = useRouter();
-  const supabase = createClient();
+  const { status: authStatus } = useSession();
   
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
@@ -21,17 +21,15 @@ export default function CategoriesPage() {
   const [isAdding, setIsAdding] = useState(false);
 
   useEffect(() => {
-    checkAuthAndFetch();
-  }, []);
-
-  const checkAuthAndFetch = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    if (authStatus === 'loading') return;
+    
+    if (authStatus === 'unauthenticated') {
       router.push('/login');
       return;
     }
-    await fetchTags();
-  };
+    
+    fetchTags();
+  }, [authStatus, router]);
 
   const fetchTags = async () => {
     try {

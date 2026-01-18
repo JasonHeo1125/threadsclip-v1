@@ -1,22 +1,27 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/db';
+import { Tag } from '@prisma/client';
 
 export async function GET() {
   try {
-    const supabase = await createClient();
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    const session = await auth();
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { data, error } = await supabase
-      .from('tags')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('name', { ascending: true });
+    const tags = await prisma.tag.findMany({
+      where: { userId: session.user.id },
+      orderBy: { name: 'asc' }
+    });
 
-    if (error) throw error;
+    const data = tags.map((tag: Tag) => ({
+      id: tag.id,
+      user_id: tag.userId,
+      name: tag.name,
+      color: tag.color,
+      created_at: tag.createdAt.toISOString()
+    }));
 
     return NextResponse.json({ data });
   } catch (error) {
@@ -27,10 +32,8 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient();
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    const session = await auth();
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -40,38 +43,36 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Tag name required' }, { status: 400 });
     }
 
-    const tagData = {
-      user_id: user.id,
-      name: name.trim() as string,
-      color: (color || '#8B5CF6') as string,
-    };
-
-    const { data, error } = await supabase
-      .from('tags')
-      .insert(tagData as never)
-      .select()
-      .single();
-
-    if (error) {
-      if (error.code === '23505') {
-        return NextResponse.json({ error: 'Tag already exists' }, { status: 409 });
+    const tag = await prisma.tag.create({
+      data: {
+        userId: session.user.id,
+        name: name.trim(),
+        color: color || '#8B5CF6'
       }
-      throw error;
-    }
+    });
+
+    const data = {
+      id: tag.id,
+      user_id: tag.userId,
+      name: tag.name,
+      color: tag.color,
+      created_at: tag.createdAt.toISOString()
+    };
 
     return NextResponse.json({ success: true, data });
   } catch (error) {
     console.error('Create tag error:', error);
+    if ((error as { code?: string }).code === 'P2002') {
+      return NextResponse.json({ error: 'Tag already exists' }, { status: 409 });
+    }
     return NextResponse.json({ error: 'Failed to create tag' }, { status: 500 });
   }
 }
 
 export async function PUT(request: Request) {
   try {
-    const supabase = await createClient();
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    const session = await auth();
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -85,34 +86,36 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'Tag name required' }, { status: 400 });
     }
 
-    const { data, error } = await supabase
-      .from('tags')
-      .update({ name: name.trim() } as never)
-      .eq('id', id)
-      .eq('user_id', user.id)
-      .select()
-      .single();
+    const tag = await prisma.tag.update({
+      where: {
+        id,
+        userId: session.user.id
+      },
+      data: { name: name.trim() }
+    });
 
-    if (error) {
-      if (error.code === '23505') {
-        return NextResponse.json({ error: 'Tag already exists' }, { status: 409 });
-      }
-      throw error;
-    }
+    const data = {
+      id: tag.id,
+      user_id: tag.userId,
+      name: tag.name,
+      color: tag.color,
+      created_at: tag.createdAt.toISOString()
+    };
 
     return NextResponse.json({ success: true, data });
   } catch (error) {
     console.error('Update tag error:', error);
+    if ((error as { code?: string }).code === 'P2002') {
+      return NextResponse.json({ error: 'Tag already exists' }, { status: 409 });
+    }
     return NextResponse.json({ error: 'Failed to update tag' }, { status: 500 });
   }
 }
 
 export async function DELETE(request: Request) {
   try {
-    const supabase = await createClient();
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    const session = await auth();
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -123,13 +126,12 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Tag ID required' }, { status: 400 });
     }
 
-    const { error } = await supabase
-      .from('tags')
-      .delete()
-      .eq('id', id)
-      .eq('user_id', user.id);
-
-    if (error) throw error;
+    await prisma.tag.delete({
+      where: {
+        id,
+        userId: session.user.id
+      }
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {
