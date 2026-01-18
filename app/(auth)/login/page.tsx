@@ -333,7 +333,9 @@ function LoginContent() {
             </>
           )}
           
-          <div className="space-y-4">
+          <div className={`space-y-4 transition-opacity duration-300 ${
+            warningContent ? 'opacity-40 pointer-events-none select-none' : ''
+          }`}>
             <h2 className="text-xl font-semibold text-[var(--color-text)]">
               {language === 'ko' ? '시작하기 전에' : 'Before you start'}
             </h2>
