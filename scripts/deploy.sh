@@ -46,7 +46,6 @@ else
     echo "✅ node_modules OK, skipping npm install"
   fi
 fi
-fi
 
 echo "🔨 Building application..."
 rm -f .next/lock
