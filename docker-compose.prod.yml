@@ -9,3 +9,5 @@ services:
       - .env.production
     environment:
       - NODE_ENV=production
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
