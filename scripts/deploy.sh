@@ -18,12 +18,34 @@ if [ "$PACKAGE_CHANGED" = true ]; then
   npm ci --include=dev
 else
   echo "✅ Checking node_modules integrity..."
-  if ! npm ls --depth=0 >/dev/null 2>&1; then
-    echo "⚠️  node_modules corrupted, reinstalling..."
+  
+  NEEDS_INSTALL=false
+  
+  if [ ! -d "node_modules" ]; then
+    echo "⚠️  node_modules missing"
+    NEEDS_INSTALL=true
+  elif [ ! -f "node_modules/.package-lock.json" ]; then
+    echo "⚠️  node_modules/.package-lock.json missing"
+    NEEDS_INSTALL=true
+  elif ! cmp -s package-lock.json node_modules/.package-lock.json; then
+    echo "⚠️  package-lock.json mismatch"
+    NEEDS_INSTALL=true
+  elif ! node -e "require('@ducanh2912/next-pwa')" 2>/dev/null; then
+    echo "⚠️  Critical dependency missing: @ducanh2912/next-pwa"
+    NEEDS_INSTALL=true
+  elif ! node -e "require('next')" 2>/dev/null; then
+    echo "⚠️  Critical dependency missing: next"
+    NEEDS_INSTALL=true
+  fi
+  
+  if [ "$NEEDS_INSTALL" = true ]; then
+    echo "🔄 Reinstalling dependencies..."
+    rm -rf node_modules
     npm ci --include=dev
   else
     echo "✅ node_modules OK, skipping npm install"
   fi
+fi
 fi
 
 echo "🔨 Building application..."
