@@ -76,6 +76,14 @@ export default function GuidePage() {
   const SHORTCUT_URL = 'https://www.icloud.com/shortcuts/312130ffbd9f4c139be54c487f18bb04';
 
   useEffect(() => {
+    const userAgent = navigator.userAgent.toLowerCase();
+    const isAndroid = /android/.test(userAgent);
+    if (isAndroid) {
+      setPlatform('android');
+    }
+  }, []);
+
+  useEffect(() => {
     const handleBeforeInstallPrompt = (e: any) => {
       e.preventDefault();
       setDeferredPrompt(e);
