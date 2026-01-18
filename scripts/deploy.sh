@@ -27,14 +27,17 @@ else
   elif [ ! -f "node_modules/.package-lock.json" ]; then
     echo "⚠️  node_modules/.package-lock.json missing"
     NEEDS_INSTALL=true
-  elif ! node -e "require('@ducanh2912/next-pwa')" 2>/dev/null; then
+  elif [ ! -d "node_modules/@ducanh2912/next-pwa" ]; then
     echo "⚠️  Critical dependency missing: @ducanh2912/next-pwa"
     NEEDS_INSTALL=true
-  elif ! node -e "require('next')" 2>/dev/null; then
+  elif [ ! -d "node_modules/next" ]; then
     echo "⚠️  Critical dependency missing: next"
     NEEDS_INSTALL=true
-  elif ! node -e "require('next-auth')" 2>/dev/null; then
+  elif [ ! -d "node_modules/next-auth" ]; then
     echo "⚠️  Critical dependency missing: next-auth"
+    NEEDS_INSTALL=true
+  elif [ ! -d "node_modules/react" ]; then
+    echo "⚠️  Critical dependency missing: react"
     NEEDS_INSTALL=true
   fi
   
