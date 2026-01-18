@@ -7,6 +7,15 @@ export default auth((req) => {
   const { nextUrl } = req;
   const isLoggedIn = !!req.auth;
   
+  const userAgent = req.headers.get('user-agent') || 'N/A';
+  
+  if (nextUrl.pathname === '/login') {
+    console.log('=== LOGIN PAGE ACCESS ===');
+    console.log('User-Agent:', userAgent);
+    console.log('Path:', nextUrl.pathname);
+    console.log('========================');
+  }
+  
   const isPublicRoute = publicRoutes.some(route => 
     nextUrl.pathname === route || nextUrl.pathname.startsWith(route + '/')
   );
