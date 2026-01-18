@@ -40,7 +40,7 @@ else
   
   if [ "$NEEDS_INSTALL" = true ]; then
     echo "🔄 Reinstalling dependencies..."
-    rm -rf node_modules
+    rm -rf node_modules 2>/dev/null || find node_modules -delete 2>/dev/null || true
     npm ci --include=dev
   else
     echo "✅ node_modules OK, skipping npm install"
