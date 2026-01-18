@@ -10,7 +10,29 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+  check-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      needs-build: ${{ steps.filter.outputs.needs-build }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      
+      - name: Check if build is needed
+        id: filter
+        run: |
+          if git diff --name-only HEAD^ HEAD | grep -qE '^(Dockerfile|package\.json|package-lock\.json|next\.config|tsconfig|prisma/schema\.prisma|lib/|components/)'; then
+            echo "needs-build=true" >> $GITHUB_OUTPUT
+            echo "🔨 Build required: Core files changed"
+          else
+            echo "needs-build=false" >> $GITHUB_OUTPUT
+            echo "⚡ Skip build: Only content/config files changed"
+          fi
+
   build-and-push:
+    needs: check-changes
+    if: needs.check-changes.outputs.needs-build == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -59,6 +81,12 @@ jobs:
           echo "✅ Docker image pushed successfully!"
           echo "Image: ${{ steps.meta.outputs.tags }}"
 
+  deploy:
+    needs: [check-changes, build-and-push]
+    if: always() && !cancelled() && !failure()
+    runs-on: ubuntu-latest
+    
+    steps:
       - name: Deploy to VM
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -69,8 +97,7 @@ jobs:
             cd /home/opc/threadsclip
             git pull origin main
             
-            # .env.production 파일 생성 (GitHub Secrets 사용)
-            cat > .env.production << EOF
+            cat > .env.production << 'ENVEOF'
             DATABASE_URL=${{ secrets.DATABASE_URL }}
             AUTH_SECRET=${{ secrets.AUTH_SECRET }}
             AUTH_GOOGLE_ID=${{ secrets.AUTH_GOOGLE_ID }}
@@ -78,21 +105,18 @@ jobs:
             AUTH_KAKAO_ID=${{ secrets.AUTH_KAKAO_ID }}
             AUTH_KAKAO_SECRET=${{ secrets.AUTH_KAKAO_SECRET }}
             NEXTAUTH_URL=https://snsclip.cloud
-            EOF
+            ENVEOF
             
-            echo "📋 .env.production 파일 생성됨"
-            echo "파일 내용 확인 (민감 정보 제외):"
-            grep -v "SECRET\|PASSWORD\|KEY" .env.production || echo "환경변수 설정됨"
-            
-            docker compose -f docker-compose.prod.yml pull
-            docker compose -f docker-compose.prod.yml down
-            docker compose -f docker-compose.prod.yml up -d
+            if [ "${{ needs.check-changes.outputs.needs-build }}" = "true" ]; then
+              echo "🔄 Pulling new Docker image..."
+              docker compose -f docker-compose.prod.yml pull
+              docker compose -f docker-compose.prod.yml down
+              docker compose -f docker-compose.prod.yml up -d
+            else
+              echo "⚡ Fast deployment: Restarting without pulling..."
+              docker compose -f docker-compose.prod.yml restart
+            fi
             
             echo "🎉 배포 완료!"
-            echo "📝 컨테이너 로그 (최근 100줄):"
-            sleep 5
-            docker logs threadsclip --tail 100
-            
-            echo ""
-            echo "🔍 환경변수 확인 (민감 정보 제외):"
-            docker exec threadsclip env | grep -E "NODE_ENV|NEXTAUTH_URL" || echo "환경변수 확인 실패"
+            sleep 3
+            docker logs threadsclip --tail 30
