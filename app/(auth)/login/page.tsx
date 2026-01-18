@@ -48,13 +48,34 @@ function LoginContent() {
     }
   }, []);
 
-  const openInExternalBrowser = () => {
+  const openInExternalBrowser = async () => {
     const currentUrl = window.location.href;
     
-    if (navigator.userAgent.includes('Android')) {
-      window.location.href = `intent://${currentUrl.replace(/^https?:\/\//, '')}#Intent;scheme=https;action=android.intent.action.VIEW;end`;
-    } else {
-      window.location.href = currentUrl;
+    try {
+      await navigator.clipboard.writeText(currentUrl);
+      
+      if (navigator.userAgent.includes('Android')) {
+        const intentUrl = `intent://${currentUrl.replace(/^https?:\/\//, '')}#Intent;scheme=https;action=android.intent.action.VIEW;end`;
+        window.location.href = intentUrl;
+        
+        setTimeout(() => {
+          alert(language === 'ko' 
+            ? '외부 브라우저가 열리지 않으면:\n1. Chrome/Samsung Internet 앱 열기\n2. 주소창에 붙여넣기 (URL 복사됨)\n3. 접속하기'
+            : 'If browser does not open:\n1. Open Chrome/Samsung Internet\n2. Paste in address bar (URL copied)\n3. Visit');
+        }, 1000);
+      } else {
+        const opened = window.open(currentUrl, '_blank');
+        
+        if (!opened || opened.closed || typeof opened.closed === 'undefined') {
+          alert(language === 'ko'
+            ? '📋 URL이 복사되었습니다!\n\n1. Safari 앱 열기\n2. 주소창 길게 누르기\n3. "붙여넣고 이동" 선택'
+            : '📋 URL copied!\n\n1. Open Safari app\n2. Long press address bar\n3. Select "Paste and Go"');
+        }
+      }
+    } catch (error) {
+      alert(language === 'ko'
+        ? `URL: ${currentUrl}\n\n1. 위 URL 복사하기\n2. Safari/Chrome 앱 열기\n3. 주소창에 붙여넣기`
+        : `URL: ${currentUrl}\n\n1. Copy the URL above\n2. Open Safari/Chrome\n3. Paste in address bar`);
     }
   };
 
@@ -135,17 +156,17 @@ function LoginContent() {
                   </h3>
                   <p className="text-sm text-[var(--color-text-secondary)] mb-3">
                     {language === 'ko' 
-                      ? '로그인이 제대로 작동하지 않을 수 있습니다. Safari나 Chrome에서 열어주세요.' 
-                      : 'Login may not work properly. Please open in Safari or Chrome.'}
+                      ? '로그인이 제대로 작동하지 않을 수 있습니다.' 
+                      : 'Login may not work properly.'}
                   </p>
                   <button
                     onClick={openInExternalBrowser}
                     className="btn btn-primary w-full text-sm"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
                     </svg>
-                    {language === 'ko' ? 'Safari/Chrome에서 열기' : 'Open in Safari/Chrome'}
+                    {language === 'ko' ? 'URL 복사하고 방법 보기' : 'Copy URL & See Instructions'}
                   </button>
                 </div>
               </div>
