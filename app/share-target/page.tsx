@@ -110,10 +110,10 @@ function ShareTargetContent() {
     checkAuth();
   }, [searchParams, router, t, authStatus]);
 
-  async function handleLogin() {
+  async function handleLogin(provider: 'google' | 'kakao') {
     const currentUrl = window.location.href;
     localStorage.setItem('redirectAfterLogin', currentUrl);
-    await signIn('google', { callbackUrl: currentUrl });
+    await signIn(provider, { callbackUrl: currentUrl });
   }
 
   async function handleSave() {
@@ -165,8 +165,21 @@ function ShareTargetContent() {
           <p className="text-[var(--color-text-secondary)] mb-6">
             쓰레드를 저장하려면 먼저 로그인해주세요
           </p>
+          {/* 카카오 로그인 버튼 */}
           <button
-            onClick={handleLogin}
+            onClick={() => handleLogin('kakao')}
+            className="btn w-full text-[#191919] border-0 hover:shadow-md transition-all mb-3"
+            style={{ backgroundColor: '#FEE500' }}
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#191919">
+              <path d="M12 3C6.477 3 2 6.463 2 10.691c0 2.68 1.784 5.036 4.478 6.376-.176.649-.638 2.351-.731 2.714-.115.451.165.445.348.324.143-.095 2.282-1.545 3.206-2.171.551.078 1.118.118 1.699.118 5.523 0 10-3.463 10-7.691C22 6.463 17.523 3 12 3z"/>
+            </svg>
+            카카오로 로그인
+          </button>
+
+          {/* Google 로그인 버튼 */}
+          <button
+            onClick={() => handleLogin('google')}
             className="btn btn-primary w-full flex items-center justify-center gap-2"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -177,6 +190,10 @@ function ShareTargetContent() {
             </svg>
             Google로 로그인
           </button>
+          
+          <p className="text-xs text-[var(--color-text-muted)] text-center mt-2">
+            ⚠️ Google 로그인이 안 되면 카카오를 이용하거나 Safari에서 열어주세요
+          </p>
           <button
             onClick={() => router.push('/')}
             className="btn btn-ghost w-full mt-3"
