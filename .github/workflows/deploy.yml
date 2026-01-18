@@ -22,7 +22,7 @@ jobs:
       - name: Check if build is needed
         id: filter
         run: |
-          if git diff --name-only HEAD^ HEAD | grep -qE '^(Dockerfile|package\.json|package-lock\.json|next\.config|tsconfig|prisma/schema\.prisma|lib/|components/|public/)'; then
+          if git diff --name-only HEAD^ HEAD | grep -qE '^(Dockerfile|package\.json|package-lock\.json|next\.config|tsconfig|prisma/schema\.prisma|app/|lib/|components/|public/)'; then
             echo "needs-build=true" >> $GITHUB_OUTPUT
             echo "🔨 Build required: Core files changed"
           else
