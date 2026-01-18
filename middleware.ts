@@ -5,7 +5,7 @@ const publicRoutes = ['/login', '/auth/callback', '/guide', '/privacy', '/terms'
 
 export default auth((req) => {
   const { nextUrl } = req;
-  const isLoggedIn = !!req.auth;
+  const isLoggedIn = !!req.auth?.user?.id;
   
   const userAgent = req.headers.get('user-agent') || 'N/A';
   
