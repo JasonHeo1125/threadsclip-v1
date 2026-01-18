@@ -66,6 +66,21 @@ export async function POST(request: Request) {
     const oembedData = await getThreadsOEmbed(cleanedUrl);
     const usernameFromUrl = extractUsernameFromUrl(cleanedUrl);
 
+    // Validate tagIds exist and belong to user
+    if (tagIds.length > 0) {
+      const validTags = await prisma.tag.findMany({
+        where: {
+          id: { in: tagIds },
+          userId: session.user.id
+        },
+        select: { id: true }
+      });
+
+      if (validTags.length !== tagIds.length) {
+        return NextResponse.json({ error: 'Invalid tag IDs' }, { status: 400 });
+      }
+    }
+
     const savedThread = await prisma.savedThread.create({
       data: {
         userId: session.user.id,
