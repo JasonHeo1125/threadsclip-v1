@@ -53,8 +53,8 @@ export default function TermsPage() {
               </li>
               <li>
                 {isKorean 
-                  ? '저장할 수 있는 게시물 수는 계정당 100개로 제한됩니다.'
-                  : 'The number of posts you can save is limited to 100 per account.'}
+                  ? '저장할 수 있는 게시물 수는 계정당 1000개로 제한됩니다.'
+                  : 'The number of posts you can save is limited to 1000 per account.'}
               </li>
               <li>
                 {isKorean 

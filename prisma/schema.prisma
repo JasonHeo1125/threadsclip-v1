@@ -44,6 +44,12 @@ model User {
   emailVerified DateTime? @map("email_verified")
   image         String?
   createdAt     DateTime  @default(now()) @map("created_at")
+  
+  // Subscription fields (준비만, 나중에 사용)
+  subscriptionTier   String   @default("free") @map("subscription_tier")  // free, legacy, pro, enterprise
+  subscriptionStatus String   @default("active") @map("subscription_status")  // active, cancelled, expired
+  subscriptionEndsAt DateTime? @map("subscription_ends_at")  // Pro 구독 종료일
+  storageLimit       Int      @default(1000) @map("storage_limit")  // 저장 가능한 게시물 수
 
   accounts     Account[]
   sessions     Session[]
