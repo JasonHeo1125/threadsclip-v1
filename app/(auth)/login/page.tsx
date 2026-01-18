@@ -263,7 +263,7 @@ function LoginContent() {
       
       <button
         onClick={toggleLanguage}
-        className="absolute top-6 right-6 btn btn-ghost text-sm z-[60]"
+        className="absolute top-6 left-6 btn btn-ghost text-sm z-[60]"
       >
         {language === 'ko' ? 'EN' : '한국어'}
       </button>
@@ -300,8 +300,8 @@ function LoginContent() {
               {warningContent.showFixedPointer && (
                 <div className={`fixed z-50 ${
                   warningContent.pointerPosition === 'top-right' 
-                    ? 'top-16 right-6' 
-                    : 'bottom-20 right-6'
+                    ? 'top-2 right-2' 
+                    : 'bottom-6 right-2'
                 }`}>
                   <div className="text-6xl animate-bounce">
                     {warningContent.pointerPosition === 'top-right' ? '👆' : '👇'}
