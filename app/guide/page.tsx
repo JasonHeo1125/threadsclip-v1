@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslation } from '@/lib/i18n';
-import { createClient } from '@/lib/supabase/client';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -26,7 +26,7 @@ function LoginStepCard({ isLoggedIn, isKorean }: { isLoggedIn: boolean; isKorean
           </span>
         </div>
         <p className="text-[var(--color-text-muted)] mt-3 text-sm">
-          {isKorean 
+          {isKorean
             ? '✅ 로그인이 완료되었습니다. 다음 단계로 진행하세요!'
             : '✅ You are logged in. Continue to the next step!'}
         </p>
@@ -48,7 +48,7 @@ function LoginStepCard({ isLoggedIn, isKorean }: { isLoggedIn: boolean; isKorean
         </span>
       </div>
       <p className="text-[var(--color-text-secondary)] mb-4">
-        {isKorean 
+        {isKorean
           ? '⚠️ 단축어 설정 전에 먼저 로그인해주세요! 로그인하지 않으면 공유 시 다시 해야 할 수 있어요.'
           : '⚠️ Please login before setting up the shortcut! Otherwise, you may need to share again.'}
       </p>
@@ -57,10 +57,10 @@ function LoginStepCard({ isLoggedIn, isKorean }: { isLoggedIn: boolean; isKorean
         className="btn btn-primary w-full flex items-center justify-center gap-2"
       >
         <svg className="w-5 h-5" viewBox="0 0 24 24">
-          <path fill="#fff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-          <path fill="#fff" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-          <path fill="#fff" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-          <path fill="#fff" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          <path fill="#fff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+          <path fill="#fff" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+          <path fill="#fff" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+          <path fill="#fff" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
         </svg>
         {isKorean ? '로그인하기' : 'Login'}
       </Link>
@@ -72,22 +72,16 @@ export default function GuidePage() {
   const { language } = useTranslation();
   const isKorean = language === 'ko';
   const [platform, setPlatform] = useState<Platform>('ios');
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstalled, setIsInstalled] = useState(false);
-  const supabase = createClient();
+  const { data: session, status } = useSession();
+  
+  const isLoggedIn = !!session;
+  const isLoading = status === 'loading';
 
-  const SHORTCUT_URL = 'https://www.icloud.com/shortcuts/8e84b75970404140964e6ccb9a344a75';
+  const SHORTCUT_URL = 'https://www.icloud.com/shortcuts/312130ffbd9f4c139be54c487f18bb04';
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setIsLoggedIn(!!user);
-      setIsLoading(false);
-    };
-    checkAuth();
-
     const handleBeforeInstallPrompt = (e: any) => {
       e.preventDefault();
       setDeferredPrompt(e);
@@ -102,7 +96,7 @@ export default function GuidePage() {
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     };
-  }, [supabase.auth]);
+  }, []);
 
   const handleInstallClick = async () => {
     if (isInstalled) {
@@ -111,8 +105,8 @@ export default function GuidePage() {
 
     if (!deferredPrompt) {
       alert(
-        isKorean 
-          ? '브라우저 메뉴(⋮)를 열고 "홈 화면에 추가" 또는 "앱 설치"를 선택해주세요.' 
+        isKorean
+          ? '브라우저 메뉴(⋮)를 열고 "홈 화면에 추가" 또는 "앱 설치"를 선택해주세요.'
           : 'Please open the browser menu (⋮) and select "Add to Home screen" or "Install app".'
       );
       return;
@@ -120,11 +114,11 @@ export default function GuidePage() {
 
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    
+
     if (outcome === 'accepted') {
       setIsInstalled(true);
     }
-    
+
     setDeferredPrompt(null);
   };
 
@@ -155,21 +149,19 @@ export default function GuidePage() {
           <div className="inline-flex bg-[var(--color-bg-elevated)] rounded-full p-1">
             <button
               onClick={() => setPlatform('ios')}
-              className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
-                platform === 'ios'
-                  ? 'bg-[var(--color-primary)] text-white'
-                  : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
-              }`}
+              className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${platform === 'ios'
+                ? 'bg-[var(--color-primary)] text-white'
+                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
+                }`}
             >
               🍎 iPhone
             </button>
             <button
               onClick={() => setPlatform('android')}
-              className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
-                platform === 'android'
-                  ? 'bg-[var(--color-primary)] text-white'
-                  : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
-              }`}
+              className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${platform === 'android'
+                ? 'bg-[var(--color-primary)] text-white'
+                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
+                }`}
             >
               🤖 Android
             </button>
@@ -198,7 +190,7 @@ export default function GuidePage() {
                 </h2>
               </div>
               <p className="text-[var(--color-text-secondary)] mb-4">
-                {isKorean 
+                {isKorean
                   ? '아래 버튼을 눌러 ThreadClip 단축어를 추가하세요.'
                   : 'Tap the button below to add the ThreadClip shortcut.'}
               </p>
@@ -215,14 +207,14 @@ export default function GuidePage() {
               </a>
               <div className="mt-4 p-3 bg-[var(--color-bg-elevated)] rounded-lg">
                 <p className="text-xs text-[var(--color-text-muted)]">
-                  {isKorean 
+                  {isKorean
                     ? '💡 단축어 앱이 열리면 "단축어 추가" 버튼을 눌러주세요'
                     : '💡 When the Shortcuts app opens, tap "Add Shortcut"'}
                 </p>
               </div>
               <div className="mt-4 bg-[var(--color-bg-elevated)] rounded-lg overflow-hidden">
-                <Image 
-                  src="/guide/iphone-1.jpg" 
+                <Image
+                  src="/guide/iphone-1.jpg"
                   alt={isKorean ? '단축어 추가 화면' : 'Add Shortcut Screen'}
                   width={1206}
                   height={2295}
@@ -241,13 +233,13 @@ export default function GuidePage() {
                 </h2>
               </div>
               <p className="text-[var(--color-text-secondary)] mb-4">
-                {isKorean 
+                {isKorean
                   ? '저장하고 싶은 게시물에서 공유 버튼을 누르세요.'
                   : 'Tap the share button on the post you want to save.'}
               </p>
               <div className="bg-[var(--color-bg-elevated)] rounded-lg overflow-hidden">
-                <Image 
-                  src="/guide/iphone-2.jpg" 
+                <Image
+                  src="/guide/iphone-2.jpg"
                   alt={isKorean ? 'Threads 공유 버튼' : 'Threads Share Button'}
                   width={1206}
                   height={2144}
@@ -266,13 +258,13 @@ export default function GuidePage() {
                 </h2>
               </div>
               <p className="text-[var(--color-text-secondary)] mb-4">
-                {isKorean 
+                {isKorean
                   ? '공유 시트에서 "Thread clip" 단축어를 선택하세요.'
                   : 'Select the "Thread clip" shortcut from the share sheet.'}
               </p>
               <div className="bg-[var(--color-bg-elevated)] rounded-lg overflow-hidden">
-                <Image 
-                  src="/guide/iphone-3.jpg" 
+                <Image
+                  src="/guide/iphone-3.jpg"
                   alt={isKorean ? 'ThreadClip 단축어 선택' : 'Select ThreadClip Shortcut'}
                   width={1206}
                   height={1409}
@@ -291,13 +283,13 @@ export default function GuidePage() {
                 </h2>
               </div>
               <p className="text-[var(--color-text-secondary)] mb-4">
-                {isKorean 
+                {isKorean
                   ? '권한 요청 팝업이 나타나면 "항상 허용"을 선택해주세요. 이후에는 별도 확인 없이 바로 저장됩니다.'
                   : 'When the permission popup appears, select "Always Allow". After this, posts will be saved without additional confirmation.'}
               </p>
               <div className="bg-[var(--color-bg-elevated)] rounded-lg overflow-hidden">
-                <Image 
-                  src="/guide/iphone-4.jpg" 
+                <Image
+                  src="/guide/iphone-4.jpg"
                   alt={isKorean ? '항상 허용 선택' : 'Select Always Allow'}
                   width={1206}
                   height={1435}
@@ -316,13 +308,13 @@ export default function GuidePage() {
                 </h2>
               </div>
               <p className="text-[var(--color-text-secondary)] mb-4">
-                {isKorean 
+                {isKorean
                   ? 'Safari가 열리면 메모를 입력하고 저장 버튼을 누르세요.'
                   : 'When Safari opens, enter a note and tap the save button.'}
               </p>
               <div className="bg-[var(--color-bg-elevated)] rounded-lg overflow-hidden">
-                <Image 
-                  src="/guide/iphone-5.jpg" 
+                <Image
+                  src="/guide/iphone-5.jpg"
                   alt={isKorean ? '메모 입력 및 저장' : 'Add Note and Save'}
                   width={1206}
                   height={2107}
@@ -333,7 +325,7 @@ export default function GuidePage() {
 
             <div className="card p-4 bg-[var(--color-primary)]/10 border-[var(--color-primary)]/30">
               <p className="text-sm text-[var(--color-text)]">
-                {isKorean 
+                {isKorean
                   ? '💡 팁: 처음 사용 시 로그인이 필요합니다. 한번 로그인하면 이후에는 바로 저장할 수 있어요!'
                   : '💡 Tip: Login is required on first use. Once logged in, you can save posts instantly!'}
               </p>
@@ -363,7 +355,7 @@ export default function GuidePage() {
                   </span>
                 </div>
                 <p className="text-[var(--color-text-muted)] mt-3 text-sm">
-                  {isKorean 
+                  {isKorean
                     ? '✅ 로그인이 완료되었습니다. 다음 단계로 진행하세요!'
                     : '✅ You are logged in. Continue to the next step!'}
                 </p>
@@ -382,7 +374,7 @@ export default function GuidePage() {
                   </span>
                 </div>
                 <p className="text-[var(--color-text-secondary)] mb-4">
-                  {isKorean 
+                  {isKorean
                     ? '⚠️ 앱 설치 전에 먼저 로그인해주세요! 로그인하지 않으면 공유 시 다시 해야 할 수 있어요.'
                     : '⚠️ Please login before installing the app! Otherwise, you may need to share again.'}
                 </p>
@@ -391,10 +383,10 @@ export default function GuidePage() {
                   className="btn btn-primary w-full flex items-center justify-center gap-2"
                 >
                   <svg className="w-5 h-5" viewBox="0 0 24 24">
-                    <path fill="#fff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                    <path fill="#fff" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                    <path fill="#fff" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                    <path fill="#fff" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    <path fill="#fff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                    <path fill="#fff" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path fill="#fff" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                    <path fill="#fff" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                   </svg>
                   {isKorean ? '로그인하기' : 'Login'}
                 </Link>
@@ -416,19 +408,18 @@ export default function GuidePage() {
                 )}
               </div>
               <p className="text-[var(--color-text-secondary)] mb-4">
-                {isKorean 
+                {isKorean
                   ? '버튼을 눌러 ThreadClip 앱을 홈 화면에 추가하세요. 앱은 메인 페이지에서 시작됩니다.'
                   : 'Tap the button to add ThreadClip app to your home screen. The app will start from the main page.'}
               </p>
-              
+
               <button
                 onClick={handleInstallClick}
                 disabled={isInstalled}
-                className={`btn w-full flex items-center justify-center gap-2 ${
-                  isInstalled 
-                    ? 'bg-green-500 text-white cursor-not-allowed opacity-60' 
-                    : 'btn-primary'
-                }`}
+                className={`btn w-full flex items-center justify-center gap-2 ${isInstalled
+                  ? 'bg-green-500 text-white cursor-not-allowed opacity-60'
+                  : 'btn-primary'
+                  }`}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   {isInstalled ? (
@@ -437,7 +428,7 @@ export default function GuidePage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                   )}
                 </svg>
-                {isInstalled 
+                {isInstalled
                   ? (isKorean ? '설치 완료' : 'Installed')
                   : (isKorean ? '홈 화면에 추가' : 'Add to Home Screen')
                 }
@@ -446,7 +437,7 @@ export default function GuidePage() {
               {!deferredPrompt && !isInstalled && (
                 <div className="mt-4 p-3 bg-[var(--color-bg-elevated)] rounded-lg">
                   <p className="text-xs text-[var(--color-text-muted)]">
-                    {isKorean 
+                    {isKorean
                       ? '💡 자동 설치가 지원되지 않는 경우, Chrome 메뉴에서 "홈 화면에 추가"를 선택하세요'
                       : '💡 If auto-install is not supported, select "Add to Home Screen" from Chrome menu'}
                   </p>
@@ -464,7 +455,7 @@ export default function GuidePage() {
                 </h2>
               </div>
               <p className="text-[var(--color-text-secondary)] mb-4">
-                {isKorean 
+                {isKorean
                   ? '저장하고 싶은 게시물에서 공유 버튼을 누르세요.'
                   : 'Tap the share button on the post you want to save.'}
               </p>
@@ -483,7 +474,7 @@ export default function GuidePage() {
                 </h2>
               </div>
               <p className="text-[var(--color-text-secondary)] mb-4">
-                {isKorean 
+                {isKorean
                   ? '공유 목록에서 "ThreadClip"을 선택하세요.'
                   : 'Select "ThreadClip" from the share list.'}
               </p>
@@ -502,7 +493,7 @@ export default function GuidePage() {
                 </h2>
               </div>
               <p className="text-[var(--color-text-secondary)] mb-4">
-                {isKorean 
+                {isKorean
                   ? '메모를 입력하고 저장 버튼을 누르세요.'
                   : 'Enter a note and tap the save button.'}
               </p>
@@ -513,7 +504,7 @@ export default function GuidePage() {
 
             <div className="card p-4 bg-[var(--color-primary)]/10 border-[var(--color-primary)]/30">
               <p className="text-sm text-[var(--color-text)]">
-                {isKorean 
+                {isKorean
                   ? '💡 팁: Android에서는 공유 시 ThreadClip이 바로 목록에 나타납니다!'
                   : '💡 Tip: On Android, ThreadClip appears directly in the share list!'}
               </p>
@@ -523,7 +514,7 @@ export default function GuidePage() {
 
         <div className="mt-8 text-center">
           <Link href={isLoggedIn ? "/" : "/login"} className="btn btn-primary">
-            {isLoggedIn 
+            {isLoggedIn
               ? (isKorean ? '홈으로 가기' : 'Go to Home')
               : (isKorean ? '시작하기' : 'Get Started')}
           </Link>
