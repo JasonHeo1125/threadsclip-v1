@@ -469,8 +469,8 @@ export default function GuidePage() {
                 <Image
                   src="/guide/android-2.jpg"
                   alt={isKorean ? 'Threads 공유 및 ThreadClip 선택' : 'Share from Threads and select ThreadClip'}
-                  width={1080}
-                  height={2400}
+                  width={1206}
+                  height={2144}
                   className="w-full h-auto"
                 />
               </div>
