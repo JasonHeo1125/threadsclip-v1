@@ -6,8 +6,8 @@ import { useRouter } from 'next/navigation';
 import { Header } from '@/components/ui/Header';
 import { showToast, ToastContainer } from '@/components/ui/Toast';
 
-const ADMIN_EMAIL = 'jasonheo1998@gmail.com';
-const ADMIN_PASSWORD = 'hur159632';
+const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || '';
+const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || '';
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
