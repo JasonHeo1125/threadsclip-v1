@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { showToast, ToastContainer } from '@/components/ui/Toast';
 
-const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || '';
-const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || '';
+const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'jasonheoai@gmail.com';
+const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'hur159632';
 
 export default function DashboardPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
