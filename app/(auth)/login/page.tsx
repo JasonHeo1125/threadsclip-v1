@@ -319,7 +319,7 @@ function LoginContent() {
       
       <button
         onClick={() => setShowDebug(!showDebug)}
-        className="absolute top-6 right-6 btn btn-ghost text-xs z-[60]"
+        className="absolute top-20 right-6 btn btn-ghost text-xs z-[60] bg-red-500/20 border border-red-500"
       >
         🔍 DEBUG
       </button>
