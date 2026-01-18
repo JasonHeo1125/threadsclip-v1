@@ -192,7 +192,7 @@ function ShareTargetContent() {
           </button>
           
           <p className="text-xs text-[var(--color-text-muted)] text-center mt-2">
-            ⚠️ Google 로그인이 안 되면 카카오를 이용하거나 Safari에서 열어주세요
+            ⚠️ Google 로그인이 안 되면 외부 브라우저(Safari, Chrome)에서 열어주세요
           </p>
           <button
             onClick={() => router.push('/')}

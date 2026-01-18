@@ -176,8 +176,8 @@ function LoginContent() {
             {/* Google 로그인 안내 */}
             <p className="text-xs text-[var(--color-text-muted)] text-center">
               {language === 'ko' 
-                ? '⚠️ Google 로그인이 안 되면 Safari에서 열어주세요'
-                : '⚠️ If Google login fails, please open in Safari'}
+                ? '⚠️ Google 로그인이 안 되면 외부 브라우저(Safari, Chrome)에서 열어주세요'
+                : '⚠️ If Google login fails, please open in external browser (Safari, Chrome)'}
             </p>
           </div>
           
