@@ -36,6 +36,7 @@ export default function HomePage() {
   const [allTags, setAllTags] = useState<Tag[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isLimitPopupOpen, setIsLimitPopupOpen] = useState(false);
+  const [storageLimit, setStorageLimit] = useState(1000);
   const offsetRef = useRef(0);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
@@ -77,16 +78,17 @@ export default function HomePage() {
       }
 
       const response = await fetch(`/api/threads?${params}`);
-      const { data, total: totalCount, hasMore: more } = await response.json();
+      const { data, total: totalCount, hasMore: more, storageLimit: limit } = await response.json();
 
       if (reset) {
         setThreads(data || []);
       } else {
         setThreads(prev => [...prev, ...(data || [])]);
       }
-      
+
       setTotal(totalCount || 0);
       setHasMore(more || false);
+      if (limit) setStorageLimit(limit);
       offsetRef.current += ITEMS_PER_PAGE;
     } catch (error) {
       console.error('Failed to fetch threads:', error);
@@ -238,7 +240,7 @@ export default function HomePage() {
   };
 
   const getStorageCountColor = () => {
-    const remaining = STORAGE_LIMITS.FREE_TIER - total;
+    const remaining = storageLimit - total;
     if (remaining <= STORAGE_LIMITS.DANGER_THRESHOLD) {
       return 'text-red-500';
     }
@@ -269,7 +271,7 @@ export default function HomePage() {
                 onClick={() => setIsLimitPopupOpen(true)}
                 className={`ml-2 text-sm font-normal ${getStorageCountColor()} hover:underline cursor-pointer`}
               >
-                ({total}/{STORAGE_LIMITS.FREE_TIER})
+                ({total}/{storageLimit})
               </button>
             </h2>
 
@@ -281,10 +283,10 @@ export default function HomePage() {
                 />
                 <div className="absolute left-0 top-full mt-2 bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-lg shadow-lg z-20 p-4 w-64">
                   <p className="text-sm text-[var(--color-text)]">
-                    무료 티어는 현재 <strong>{STORAGE_LIMITS.FREE_TIER}개</strong>까지 저장 가능합니다.
+                    현재 <strong>{storageLimit}개</strong>까지 저장 가능합니다.
                   </p>
                   <p className="text-xs text-[var(--color-text-muted)] mt-2">
-                    더 많은 저장 공간이 필요하시면 프로 플랜을 이용해주세요.
+                    저장 한도는 관리자가 설정합니다.
                   </p>
                   <button
                     onClick={() => setIsLimitPopupOpen(false)}

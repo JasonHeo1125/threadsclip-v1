@@ -165,7 +165,7 @@ export async function GET(request: Request) {
       } : {})
     };
 
-    const [threads, total] = await Promise.all([
+    const [threads, total, user] = await Promise.all([
       prisma.savedThread.findMany({
         where,
         include: {
@@ -179,7 +179,11 @@ export async function GET(request: Request) {
         skip: offset,
         take: limit,
       }),
-      prisma.savedThread.count({ where })
+      prisma.savedThread.count({ where }),
+      prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { storageLimit: true }
+      })
     ]);
 
     const threadsWithTags = (threads as ThreadWithTags[]).map((thread) => ({
@@ -202,10 +206,11 @@ export async function GET(request: Request) {
       }))
     }));
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       data: threadsWithTags,
       total,
-      hasMore: (offset + limit) < total
+      hasMore: (offset + limit) < total,
+      storageLimit: user?.storageLimit || 1000
     });
   } catch (error) {
     console.error('Get threads error:', error);
