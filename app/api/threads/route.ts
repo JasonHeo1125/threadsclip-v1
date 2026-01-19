@@ -23,7 +23,9 @@ export async function POST(request: Request) {
   let session;
   try {
     session = await auth();
+    console.log('Auth check:', { hasSession: !!session, hasUserId: !!session?.user?.id });
     if (!session?.user?.id) {
+      console.error('Unauthorized: No valid session');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
