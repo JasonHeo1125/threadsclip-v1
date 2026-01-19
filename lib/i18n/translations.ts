@@ -50,6 +50,7 @@ export const translations = {
       saved: '저장되었습니다!',
       alreadySaved: '이미 저장된 쓰레드입니다',
       invalidUrl: '유효한 Threads 링크가 아닙니다',
+      invalidOrInaccessible: '링크를 확인할 수 없습니다. 삭제되었거나 비공개 게시물일 수 있습니다.',
       deleteConfirm: '이 쓰레드를 삭제하시겠습니까?',
       maxReached: '저장 한도(200개)에 도달했습니다',
     },
@@ -137,6 +138,7 @@ export const translations = {
       saved: 'Saved!',
       alreadySaved: 'This thread is already saved',
       invalidUrl: 'Invalid Threads link',
+      invalidOrInaccessible: 'Unable to access the link. The post may have been deleted or is private.',
       deleteConfirm: 'Delete this thread?',
       maxReached: 'Storage limit reached (200 threads)',
     },
@@ -224,6 +226,7 @@ type TranslationStructure = {
     saved: string;
     alreadySaved: string;
     invalidUrl: string;
+    invalidOrInaccessible: string;
     deleteConfirm: string;
     maxReached: string;
   };

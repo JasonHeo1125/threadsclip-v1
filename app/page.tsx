@@ -140,13 +140,16 @@ export default function HomePage() {
 
   const handleSaveThread = async (url: string, memo: string, tagIds: string[] = []) => {
     try {
+      console.log('[Client] Saving thread:', { url, memo, tagIds });
       const response = await fetch('/api/threads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url, memo, tagIds }),
       });
 
+      console.log('[Client] Response status:', response.status, response.statusText);
       const result = await response.json();
+      console.log('[Client] Response body:', result);
 
       if (!response.ok) {
         if (response.status === 409) {
@@ -157,13 +160,20 @@ export default function HomePage() {
           showToast(t.thread.maxReached, 'error');
           return;
         }
+        if (response.status === 400 && result.error?.includes('Invalid or inaccessible')) {
+          showToast(t.thread.invalidOrInaccessible, 'error');
+          return;
+        }
+        console.error('[Client] Save failed with error:', result.error);
         throw new Error(result.error);
       }
 
+      console.log('[Client] Save successful');
       showToast(t.thread.saved, 'success');
       fetchThreads(true);
       fetchTags();
-    } catch {
+    } catch (error) {
+      console.error('[Client] Save exception:', error);
       throw new Error('Save failed');
     }
   };

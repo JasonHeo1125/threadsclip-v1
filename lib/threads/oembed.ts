@@ -36,7 +36,7 @@ export async function getThreadsOEmbed(url: string): Promise<ThreadsOEmbedRespon
 
     if (!response.ok) {
       console.error(`oEmbed failed: ${response.status}`);
-      return null;
+      throw new Error(`Invalid or inaccessible Threads URL (status: ${response.status})`);
     }
 
     return response.json();

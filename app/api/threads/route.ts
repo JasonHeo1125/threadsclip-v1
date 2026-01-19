@@ -20,8 +20,9 @@ function cleanThreadsUrl(url: string): string {
 }
 
 export async function POST(request: Request) {
+  let session;
   try {
-    const session = await auth();
+    session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -63,7 +64,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Thread already saved', id: existing.id }, { status: 409 });
     }
 
-    const oembedData = await getThreadsOEmbed(cleanedUrl);
+    let oembedData;
+    try {
+      oembedData = await getThreadsOEmbed(cleanedUrl);
+    } catch (error) {
+      console.error('oEmbed fetch failed:', { url: cleanedUrl, error });
+      return NextResponse.json({ 
+        error: 'Invalid or inaccessible Threads URL. Please check the link.',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      }, { status: 400 });
+    }
+
     const usernameFromUrl = extractUsernameFromUrl(cleanedUrl);
 
     // Validate tagIds exist and belong to user
@@ -98,9 +109,18 @@ export async function POST(request: Request) {
       }
     });
 
-    return NextResponse.json({ success: true, data: savedThread });
+    console.log('Thread saved successfully:', { threadId: savedThread.id, userId: session.user.id });
+
+    const response = NextResponse.json({ success: true, data: savedThread });
+    console.log('Returning 200 OK response');
+    return response;
   } catch (error) {
-    console.error('Save thread error:', error);
+    console.error('Save thread error:', {
+      error: error instanceof Error ? error.message : error,
+      stack: error instanceof Error ? error.stack : undefined,
+      userId: session?.user?.id
+    });
+    console.error('Returning 500 error response');
     return NextResponse.json(
       { error: 'Failed to save thread' },
       { status: 500 }

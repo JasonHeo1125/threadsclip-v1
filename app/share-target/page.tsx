@@ -122,20 +122,31 @@ function ShareTargetContent() {
     setStatus('saving');
     
     try {
+      console.log('[ShareTarget] Saving thread:', { url: threadsUrl, memo, tagIds: selectedTagIds });
       const response = await fetch('/api/threads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: threadsUrl, memo: memo.trim(), tagIds: selectedTagIds }),
       });
 
+      console.log('[ShareTarget] Response status:', response.status, response.statusText);
+      const result = await response.json();
+      console.log('[ShareTarget] Response body:', result);
+
       if (response.ok || response.status === 409) {
         localStorage.setItem(LAST_TAGS_KEY, JSON.stringify(selectedTagIds));
         setStatus('success');
         setMessage(t.pwa.shareTargetSuccess);
+      } else if (response.status === 400 && result.error?.includes('Invalid or inaccessible')) {
+        setStatus('error');
+        setMessage(t.thread.invalidOrInaccessible);
+        setTimeout(() => router.push('/'), 3000);
       } else {
+        console.error('[ShareTarget] Save failed:', result.error);
         throw new Error('Save failed');
       }
-    } catch {
+    } catch (error) {
+      console.error('[ShareTarget] Save exception:', error);
       setStatus('error');
       setMessage(t.common.error);
       setTimeout(() => router.push('/'), 2000);
