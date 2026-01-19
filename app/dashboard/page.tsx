@@ -44,6 +44,7 @@ export default function DashboardPage() {
       if (data.success) {
         setIsAuthenticated(true);
         localStorage.setItem('adminAuth', 'true');
+        localStorage.setItem('adminKey', passwordInput); // API 인증용 키 저장
         fetchData();
       } else {
         showToast('이메일 또는 비밀번호가 올바르지 않습니다.', 'error');
@@ -58,20 +59,26 @@ export default function DashboardPage() {
   const handleLogout = () => {
     setIsAuthenticated(false);
     localStorage.removeItem('adminAuth');
+    localStorage.removeItem('adminKey');
     setEmailInput('');
     setPasswordInput('');
   };
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
+    const adminKey = localStorage.getItem('adminKey') || '';
     try {
-      const userRes = await fetch(`/api/admin/users?page=${page}&search=${searchQuery}`);
+      const userRes = await fetch(`/api/admin/users?page=${page}&search=${searchQuery}`, {
+        headers: { 'x-admin-key': adminKey }
+      });
       const userData = await userRes.json();
       if (userData.error) throw new Error(userData.error);
       setUsers(userData.data);
       setTotalPages(userData.meta.totalPages);
 
-      const settingRes = await fetch('/api/admin/settings');
+      const settingRes = await fetch('/api/admin/settings', {
+        headers: { 'x-admin-key': adminKey }
+      });
       const settingData = await settingRes.json();
       if (settingData.defaultValue) {
         setDefaultLimit(settingData.defaultValue);
@@ -97,10 +104,14 @@ export default function DashboardPage() {
   };
 
   const handleUpdateLimit = async (userId: string, newLimit: number) => {
+    const adminKey = localStorage.getItem('adminKey') || '';
     try {
       const res = await fetch('/api/admin/users', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-admin-key': adminKey
+        },
         body: JSON.stringify({ userId, storageLimit: newLimit }),
       });
       const data = await res.json();
@@ -117,10 +128,14 @@ export default function DashboardPage() {
   };
 
   const handleUpdateDefaultLimit = async () => {
+    const adminKey = localStorage.getItem('adminKey') || '';
     try {
       const res = await fetch('/api/admin/settings', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-admin-key': adminKey
+        },
         body: JSON.stringify({ defaultValue: defaultLimit }),
       });
       if (res.ok) {
