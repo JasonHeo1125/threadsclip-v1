@@ -33,6 +33,28 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
     },
   },
+  events: {
+    createUser: async ({ user }) => {
+      try {
+        const setting = await prisma.systemSettings.findUnique({
+          where: { key: 'DEFAULT_STORAGE_LIMIT' }
+        });
+        
+        if (setting?.value) {
+          const limit = parseInt(setting.value);
+          if (!isNaN(limit)) {
+            await prisma.user.update({
+              where: { id: user.id },
+              data: { storageLimit: limit }
+            });
+            console.log(`[Auth] Set initial storage limit for user ${user.id} to ${limit}`);
+          }
+        }
+      } catch (error) {
+        console.error('[Auth] Failed to set initial storage limit:', error);
+      }
+    },
+  },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {

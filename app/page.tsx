@@ -283,10 +283,7 @@ export default function HomePage() {
                 />
                 <div className="absolute left-0 top-full mt-2 bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-lg shadow-lg z-20 p-4 w-64">
                   <p className="text-sm text-[var(--color-text)]">
-                    현재 <strong>{storageLimit}개</strong>까지 저장 가능합니다.
-                  </p>
-                  <p className="text-xs text-[var(--color-text-muted)] mt-2">
-                    저장 한도는 관리자가 설정합니다.
+                    서버 안정화를 위해 현재 <strong>{storageLimit}개</strong>까지 저장 가능합니다.
                   </p>
                   <button
                     onClick={() => setIsLimitPopupOpen(false)}
