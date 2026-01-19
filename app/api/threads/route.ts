@@ -69,6 +69,7 @@ export async function POST(request: Request) {
     let oembedData;
     try {
       oembedData = await getThreadsOEmbed(cleanedUrl);
+      console.log('oEmbed result:', oembedData ? 'Data received' : 'null returned');
     } catch (error) {
       console.error('oEmbed fetch failed:', { url: cleanedUrl, error });
       return NextResponse.json({ 
@@ -78,9 +79,11 @@ export async function POST(request: Request) {
     }
 
     const usernameFromUrl = extractUsernameFromUrl(cleanedUrl);
+    console.log('Extracted username:', usernameFromUrl);
 
     // Validate tagIds exist and belong to user
     if (tagIds.length > 0) {
+      console.log('Validating tagIds:', tagIds);
       const validTags = await prisma.tag.findMany({
         where: {
           id: { in: tagIds },
@@ -89,11 +92,14 @@ export async function POST(request: Request) {
         select: { id: true }
       });
 
+      console.log('Valid tags found:', validTags.length, 'Expected:', tagIds.length);
       if (validTags.length !== tagIds.length) {
+        console.error('Invalid tag IDs detected');
         return NextResponse.json({ error: 'Invalid tag IDs' }, { status: 400 });
       }
     }
 
+    console.log('Starting DB save...');
     const savedThread = await prisma.savedThread.create({
       data: {
         userId: session.user.id,
