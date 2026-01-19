@@ -260,7 +260,18 @@ function ShareTargetContent() {
           <div className="flex flex-col gap-3 max-w-xs mx-auto">
             <button
               onClick={() => {
-                window.location.href = 'https://www.threads.net';
+                // Android: Intent URL로 Threads 앱 열기 시도
+                // iOS: threads:// 스킴 또는 threads.net 자동 전환
+                const userAgent = navigator.userAgent.toLowerCase();
+                const isAndroid = /android/.test(userAgent);
+                
+                if (isAndroid) {
+                  // Android Intent URL - Threads 앱으로 직접 이동
+                  window.location.href = 'intent://www.threads.net/#Intent;scheme=https;package=com.instagram.barcelona;end';
+                } else {
+                  // iOS는 threads.net으로 이동하면 자동으로 앱 전환됨
+                  window.location.href = 'https://www.threads.net';
+                }
               }}
               className="px-6 py-3 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors font-medium"
             >
