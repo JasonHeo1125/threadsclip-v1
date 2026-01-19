@@ -178,6 +178,31 @@ export default function HomePage() {
     }
   };
 
+  const handleUpdateMemo = async (id: string, memo: string) => {
+    try {
+      const response = await fetch('/api/threads', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, memo }),
+      });
+
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.error || 'Failed to update memo');
+      }
+
+      setThreads(prev => prev.map(thread => 
+        thread.id === id ? { ...thread, memo } : thread
+      ));
+      
+      showToast(t.common.success, 'success');
+    } catch (error) {
+      console.error('Update memo error:', error);
+      showToast(t.common.error, 'error');
+      throw error; // 모달에서 에러 처리하도록 throw
+    }
+  };
+
   const handleDeleteThread = async (id: string) => {
     if (!confirm(t.thread.deleteConfirm)) return;
 
@@ -369,6 +394,7 @@ export default function HomePage() {
                   <ThreadCard
                     thread={thread}
                     onDelete={handleDeleteThread}
+                    onUpdateMemo={handleUpdateMemo}
                   />
                 </div>
               ))}

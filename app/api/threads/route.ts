@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { getThreadsOEmbed, extractTextFromHtml, isValidThreadsUrl, extractUsernameFromUrl } from '@/lib/threads/oembed';
-import { STORAGE_LIMITS } from '@/lib/constants';
 import { SavedThread, Tag, ThreadTag } from '@prisma/client';
 
 type ThreadWithTags = SavedThread & {
@@ -212,6 +211,55 @@ export async function GET(request: Request) {
     console.error('Get threads error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch threads' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id, memo } = await request.json();
+
+    if (!id) {
+      return NextResponse.json({ error: 'Thread ID required' }, { status: 400 });
+    }
+
+    if (memo && memo.length > 1000) {
+      return NextResponse.json({ error: 'Memo exceeds 1000 characters limit' }, { status: 400 });
+    }
+
+    // Verify ownership
+    const thread = await prisma.savedThread.findUnique({
+      where: { id },
+      select: { userId: true }
+    });
+
+    if (!thread) {
+      return NextResponse.json({ error: 'Thread not found' }, { status: 404 });
+    }
+
+    if (thread.userId !== session.user.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
+    const updatedThread = await prisma.savedThread.update({
+      where: { id },
+      data: { 
+        memo: memo || null,
+        updatedAt: new Date()
+      }
+    });
+
+    return NextResponse.json({ success: true, data: updatedThread });
+  } catch (error) {
+    console.error('Update thread error:', error);
+    return NextResponse.json(
+      { error: 'Failed to update thread' },
       { status: 500 }
     );
   }
