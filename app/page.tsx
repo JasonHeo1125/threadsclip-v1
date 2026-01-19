@@ -341,8 +341,8 @@ export default function HomePage() {
         ) : threads.length === 0 ? (
           <EmptyState
             icon={searchQuery ? 'search' : 'bookmark'}
-            title={searchQuery ? t.common.error : undefined}
-            subtitle={searchQuery ? undefined : undefined}
+            title={searchQuery ? t.home.noResults : undefined}
+            subtitle={searchQuery ? t.home.noResultsSubtitle : undefined}
             action={
               !searchQuery && (
                 <button

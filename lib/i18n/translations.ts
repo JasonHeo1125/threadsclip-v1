@@ -30,6 +30,8 @@ export const translations = {
       title: '저장된 쓰레드',
       empty: '아직 저장된 쓰레드가 없습니다',
       emptySubtitle: 'Threads 링크를 붙여넣어 첫 게시물을 저장해보세요',
+      noResults: '검색 결과가 없습니다',
+      noResultsSubtitle: '다른 검색어로 다시 시도해보세요',
       addNew: '새 쓰레드 저장',
       searchPlaceholder: '저장된 쓰레드 검색...',
       sortBy: '정렬',
@@ -118,6 +120,8 @@ export const translations = {
       title: 'Saved Threads',
       empty: 'No saved threads yet',
       emptySubtitle: 'Paste a Threads link to save your first post',
+      noResults: 'No results found',
+      noResultsSubtitle: 'Try using different keywords',
       addNew: 'Save New Thread',
       searchPlaceholder: 'Search saved threads...',
       sortBy: 'Sort by',
@@ -207,6 +211,8 @@ type TranslationStructure = {
     title: string;
     empty: string;
     emptySubtitle: string;
+    noResults: string;
+    noResultsSubtitle: string;
     addNew: string;
     searchPlaceholder: string;
     sortBy: string;
