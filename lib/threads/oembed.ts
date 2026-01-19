@@ -42,6 +42,7 @@ export async function getThreadsOEmbed(url: string): Promise<ThreadsOEmbedRespon
     return response.json();
   } catch (error) {
     console.error('Threads oEmbed error:', error);
+    console.error('Returning null from catch block');
     return null;
   }
 }
