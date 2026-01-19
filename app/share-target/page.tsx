@@ -273,12 +273,14 @@ function ShareTargetContent() {
                 const userAgent = navigator.userAgent.toLowerCase();
                 const isAndroid = /android/.test(userAgent);
                 
-                if (isAndroid) {
-                  // Android Intent URL - Threads 앱으로 직접 이동
-                  window.location.href = 'intent://www.threads.net/#Intent;scheme=https;package=com.instagram.barcelona;end';
+                if (isAndroid && threadsUrl) {
+                  // Android Intent URL - 방금 저장한 게시물 상세 화면으로 이동
+                  // 예: intent://www.threads.net/@user/post/123#Intent;scheme=https;package=com.instagram.barcelona;end
+                  const urlWithoutProtocol = threadsUrl.replace(/^https?:\/\//, '');
+                  window.location.href = `intent://${urlWithoutProtocol}#Intent;scheme=https;package=com.instagram.barcelona;end`;
                 } else {
-                  // iOS는 threads.net으로 이동하면 자동으로 앱 전환됨
-                  window.location.href = 'https://www.threads.net';
+                  // iOS 또는 URL이 없는 경우 기존 방식
+                  window.location.href = threadsUrl || 'https://www.threads.net';
                 }
               }}
               className="px-6 py-3 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors font-medium"
