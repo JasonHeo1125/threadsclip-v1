@@ -27,9 +27,12 @@ function ShareTargetContent() {
     try {
       const response = await fetch('/api/tags');
       const { data } = await response.json();
-      setTags(data || []);
+      const tagData = data || [];
+      setTags(tagData);
+      return tagData;
     } catch (error) {
       console.error('Failed to fetch tags:', error);
+      return [];
     }
   };
 
@@ -76,11 +79,16 @@ function ShareTargetContent() {
         return;
       }
 
-      await fetchTags();
+      const availableTags = await fetchTags();
+      
       const savedTags = localStorage.getItem(LAST_TAGS_KEY);
       if (savedTags) {
         try {
-          setSelectedTagIds(JSON.parse(savedTags));
+          const parsedTagIds: string[] = JSON.parse(savedTags);
+          const validTagIds = parsedTagIds.filter(id => 
+            availableTags.some((tag: Tag) => tag.id === id)
+          );
+          setSelectedTagIds(validTagIds);
         } catch {
           setSelectedTagIds([]);
         }
