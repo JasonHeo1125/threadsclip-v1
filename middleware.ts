@@ -21,8 +21,9 @@ export default auth((req) => {
   );
   
   const isShareTarget = nextUrl.pathname === '/share-target';
+  const isGoogleAdsBot = userAgent.includes('Google-Display-Ads-Bot');
   
-  if (!isLoggedIn && !isPublicRoute && !isShareTarget) {
+  if (!isLoggedIn && !isPublicRoute && !isShareTarget && !isGoogleAdsBot) {
     return NextResponse.redirect(new URL('/login', nextUrl));
   }
 
