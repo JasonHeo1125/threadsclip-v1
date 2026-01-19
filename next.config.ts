@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 import withPWA from "@ducanh2912/next-pwa";
 
 const nextConfig: NextConfig = {
-  // Trigger build: AdSense bot fix
+  // Trigger build: Use standard script tag for AdSense
   output: 'standalone',
   turbopack: {},
   images: {
